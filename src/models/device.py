@@ -13,7 +13,7 @@ class Device(BaseModel, SqlModel):
     device_id: str = Field(default_factory=lambda:str(uuid4()))
     device_name: str
     owner_id: str
-    created_on: str = Field(default_factory=lambda:datetime.now().isoformat())
+    created_on: datetime = Field(default_factory=lambda:datetime.now().isoformat())
     status: str = "ACTIVE"
 
     @staticmethod
