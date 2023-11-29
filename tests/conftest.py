@@ -1,11 +1,14 @@
+import logging
+logger = logging.getLogger(__name__)
 import sys, os
 import pytest
 from fastapi.testclient import TestClient
 from datetime import datetime
 
 sys.path.append(f"{os.getcwd()}/src")
+print(sys.path)
 
-from src.main import app, app_config # TODO: Figure out better way to test the app
+from main import app, app_config # TODO: Figure out better way to test the app
 from models.media import MediaRequest
 
 @pytest.fixture(scope="session")

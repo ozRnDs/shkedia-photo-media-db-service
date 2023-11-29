@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from datetime import datetime
 from models.media import MediaRequest, MediaDB, MediaDeviceStatus, MediaUploadStatus
+from routes.search_utils import SearchResult
 
 def test_put_media_device_doent_exists(client_fixture: TestClient):
     # SETUP
@@ -15,7 +16,7 @@ def test_put_media_device_doent_exists(client_fixture: TestClient):
 
 
     # Test
-    response = client_fixture.put("/media", content=test_media.model_dump_json())
+    response = client_fixture.put("/v1/media", content=test_media.model_dump_json())
 
     # ASSERT
     assert response.status_code == 500
@@ -33,7 +34,7 @@ def test_put_media_nominal(client_fixture: TestClient, media_request_fixture_nom
 
     test_media = media_request_fixture_nominal
     # Test
-    response = client_fixture.put("/media", content=test_media.model_dump_json())
+    response = client_fixture.put("/v1/media", content=test_media.model_dump_json())
 
     # ASSERT
     assert response.status_code == 200
@@ -53,13 +54,12 @@ def test_get_search_media_nominal(client_fixture, media_request_fixture_device_d
     search_value = "Test_Media"
 
     # Test
-    response = client_fixture.get(f"/media/search?search_field={search_field}&search_value={search_value}")
+    response = client_fixture.get(f"/v1/media/search?search_field={search_field}&search_value={search_value}")
 
     # ASSERT
     assert response.status_code == 200
     response_json = response.json()
-    if type(response_json) == list:
-        for media in response_json:
-            temp_media_object = MediaDB(**media)
-    if type(response_json) == dict:
+    if "total_result_number" in response_json:
+        temp_media_object = SearchResult(**response_json)
+    if "media_id" in response_json:
         temp_media_object = MediaDB(**response_json)
