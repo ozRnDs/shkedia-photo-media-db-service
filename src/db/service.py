@@ -2,12 +2,13 @@ import logging
 logger = logging.getLogger(__name__)
 import json
 import psycopg
+from psycopg.errors import OperationalError
 from abc import ABC
-from typing import Type, TypeVar
-
+from typing import Type, TypeVar, Any
+from pydantic import BaseModel
 from db.sql_from_model import get_table_name_from_object
 
-class SqlModel(ABC):
+class SqlModel():
 
     @staticmethod
     def __sql_create_table__():
@@ -31,6 +32,23 @@ class SqlModel(ABC):
         sql_template = ...
         return ...
 
+    def __get_updated_values__(self: BaseModel, updated_model: BaseModel):
+        current_dictionary = self.model_dump()
+        new_dictionary = updated_model.model_dump()
+        # Make sure the item's id can't change - extract it from update_model
+        id_field_name = type(self).__name__.lower().replace("db","") + "_id"
+        new_dictionary.pop(id_field_name)
+        current_dictionary.pop(id_field_name)
+
+        update_dictionary = {}
+        for field_name, field_value in current_dictionary.items():
+            if not field_name in new_dictionary:
+                update_dictionary[field_name]=new_dictionary[field_name]
+                continue
+            if field_value != new_dictionary[field_name]:
+                update_dictionary[field_name]=new_dictionary[field_name]
+        return update_dictionary
+
 TSqlModel = TypeVar("TSqlModel", bound=SqlModel)
 
 class DBService:
@@ -47,7 +65,8 @@ class DBService:
                                                         dbname=credential_object["db_name"],
                                                         user=credential_object["user"],
                                                         password=credential_object["password"],
-                                                        connect_timeout=connection_timeout)
+                                                        connect_timeout=connection_timeout,
+                                                        autocommit=True)
         except Exception as err:
             logger.error(err)
             raise ConnectionError("Couldn't connect to the server")
@@ -76,9 +95,12 @@ class DBService:
         return model_object
 
     def select(self, model_type: Type[TSqlModel], **kargs) -> TSqlModel:
-        search_key = (list)(kargs.keys())[0]
-        search_value = (list)(kargs.values())[0]
-        sql_template, values = model_type.__sql_select_item__(search_key, search_value)
+        search_keys = (list)(kargs.keys())
+        search_values = (list)(kargs.values())
+        for search_key in search_keys:
+            if not search_key in model_type.model_fields:
+                raise AttributeError(f"Invalid Search Key: {search_key}")
+        sql_template, values = model_type.__sql_select_item__(search_keys, search_values)
         curser = self.__execute_sql__(sql_template=sql_template, values=values, get_cursor=True)
         responses = curser.fetchall()
         curser.close()
@@ -91,38 +113,64 @@ class DBService:
             return models_list
         return None
     
-    @staticmethod
-    def __parse_response_to_model__(model_type: Type[TSqlModel], values_list: list):
-        fields = model_type.model_fields
-        kargs = {}
-        for field_index, field_name in enumerate(fields):
-            if values_list[field_index] is None:
-                continue
-            # kargs[field_name] = eval(values_list[field_index])
-            kargs[field_name] = (fields[field_name].annotation)(values_list[field_index])
-        return model_type(**kargs)
-
-
     def delete(self, model_object: TSqlModel):
         sql_template, values = model_object.__sql_delete_item__()
         self.__execute_sql__(sql_template=sql_template, values=values, commit=True)
 
-    def update(self, model_object: TSqlModel):
-        sql_template, values = model_object.__sql_update_item__()
+    def update(self, current_model_object: TSqlModel, new_model_object: TSqlModel):
+        sql_template, values = current_model_object.__sql_update_item__(new_model_object)
         self.__execute_sql__(sql_template=sql_template, values=values, commit=True)
 
-    def __execute_sql__(self, sql_template, values: tuple, get_cursor=False, commit=False):
+    def close(self):
+        if not self.db_connection_object:
+            return
+        if self.db_connection_object.closed:
+            return
+        self.db_connection_object.close()
+        logger.info("Closed DB Connection")
+
+    def __execute_sql__(self, sql_template, values: tuple, get_cursor=False, commit=False, retry=0):
+        if self.db_connection_object.closed:
+            logger.info("Reconnect to DB Service")
+            self.__connect__()
         temp_curser = self.db_connection_object.cursor()
         try:
             temp_curser.execute(sql_template, values)
-            if commit:
-                self.db_connection_object.commit()
+            # if commit:
+            #     self.db_connection_object.commit()
             if get_cursor:
                 return temp_curser
+            temp_curser.close()
+            return
+        except OperationalError as err:
+            if "EOF detected" in str(err):
+                if not temp_curser.closed:
+                    temp_curser.close()
+                if retry>10:
+                    raise err
+                return self.__execute_sql__(sql_template=sql_template,
+                                            values=values,
+                                            get_cursor=get_cursor,
+                                            commit=commit,
+                                            retry=retry+1)
         except Exception as err:
+            if not temp_curser.closed:
+                temp_curser.close()
             logger.error(err)
-        temp_curser.close()
-        
+            raise err
+ 
+    @staticmethod
+    def __parse_response_to_model__(model_type: Type[TSqlModel], values_list: list):
+        fields = model_type.model_fields
+        kargs = {}
+        if len(fields)!=len(values_list):
+            raise AttributeError(f"Can't parse db response to the model. Got {len(values_list)} values from the DB and have {len(fields)} in the model.")
+        for field_index, field_name in enumerate(fields):
+            if values_list[field_index] is None:
+                continue
+            # kargs[field_name] = eval(values_list[field_index])
+            kargs[field_name] = values_list[field_index]
+        return model_type(**kargs)        
 
     def __is_changing_query__(self, query):
         if "INSERT INTO" in query:
@@ -137,12 +185,6 @@ class DBService:
     def __del__(self):
         self.close()
 
-    def close(self):
-        if not self.db_connection_object:
-            return
-        if self.db_connection_object.closed:
-            return
-        self.db_connection_object.close()
-        logger.info("Closed DB Connection")
+
 
         
