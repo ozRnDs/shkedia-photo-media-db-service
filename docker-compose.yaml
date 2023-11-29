@@ -1,0 +1,15 @@
+services:
+  auth-api:
+    image: public.ecr.aws/q2n5r5e8/ozrnds/shkedia-photo-media-db-service:${AUTH_SERVICE_VERSION}
+    container_name: media_db_api
+    env_file: .local/media_db_service.env
+    environment:
+      - AUTH_DB_CREDENTIALS_LOCATION
+      - JWT_KEY_LOCATION
+      - TOKEN_TIME_PERIOD
+    expose:
+      - "5000"
+    ports:
+      - "4431:5000"
+    volumes:
+      - ${HOST_MOUNT}:/temp
