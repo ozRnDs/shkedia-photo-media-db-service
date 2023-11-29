@@ -8,12 +8,12 @@ class ApplicationConfiguration:
     RETRY_NUMBER: int = 10
 
     # Authentication Configuration values
-    JWT_KEY_LOCATION: str = "CHANGE ME"
+    JWT_KEY_LOCATION: str = "/temp/jwt_token"
     AUTH_SERVICE_URL: str = "CHANGE ME"
     TOKEN_TIME_PERIOD: int = 15
 
     # DB Configuration values
-    AUTH_DB_CREDENTIALS_LOCATION: str = "CHANGE ME"
+    AUTH_DB_CREDENTIALS_LOCATION: str = "/temp/postgres_credentials/postgres_credentials.json"
     
     def __init__(self) -> None:
         self.logger = logging.getLogger()
