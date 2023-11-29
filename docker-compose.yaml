@@ -1,6 +1,6 @@
 services:
   auth-api:
-    image: public.ecr.aws/q2n5r5e8/ozrnds/shkedia-photo-media-db-service:${AUTH_SERVICE_VERSION}
+    image: public.ecr.aws/q2n5r5e8/ozrnds/shkedia-photo-media-db-service:${MEDIA_DB_SERVICE_VERSION}
     container_name: media_db_api
     env_file: .local/media_db_service.env
     environment:
