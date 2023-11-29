@@ -14,10 +14,11 @@ from routes.media import MediaServiceHandler
 from models.user import UserDB
 from models.device import Device
 from models.session import Session
+from models.media import MediaDB
     
 app = FastAPI(description="Rest API Interface for the media db service")
 
- #TODO: Bind auth service as middleware to all requests
+#TODO: Bind auth service as middleware to all requests
 
 # Initialize all app services
 try:
@@ -25,6 +26,7 @@ try:
     db_service.create_table(UserDB)
     db_service.create_table(Device)
     db_service.create_table(Session)
+    db_service.create_table(MediaDB)
 
 except Exception as err:
     app_config.logger.error(f"Failed to initialize the db. {err}")
@@ -41,8 +43,4 @@ except Exception as err:
 # Connect all routes
 # Example: app.include_router(new_component.router, prefix="/path")
 
-app.include_router(media_service.router, prefix="/media")
-
-
-if __name__ == "__main__":
-    pass
+app.include_router(media_service.router, prefix="v1/media")
