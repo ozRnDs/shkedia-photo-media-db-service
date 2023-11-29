@@ -1,0 +1,18 @@
+## 0.1.0 (2023-11-29)
+
+### Feat
+
+- **main,models/media,routes/media,routes/search_utils**: Add CRU(D) actions the MediaDB Object. Including complex search route and utils
+- **db/service**: Add generic updated_value logics. Enable autocommit on the connection. Upgrade the select function to handle multiple search parameters. Add error handlers for connection time out (in __execute_sql__). Adjust __parse_response_to_model__ to support more types and values
+- **src**: Copy the RestAPI template and create Media object and Route
+
+### Fix
+
+- **routes/media/put_media**: Return HTTPException if device was not found
+- **models/device,routes/media**: Adjust the device select function to the new version (using IN sql statment). Update the put routes to call correctly to the function
+- **main**: Fix missing / in route prefix
+
+### Refactor
+
+- **models/device**: Change the create_on from str to datetime (to better support parsing)
+- **project**: Initialize the project version and ide settings
