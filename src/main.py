@@ -43,4 +43,4 @@ except Exception as err:
 # Connect all routes
 # Example: app.include_router(new_component.router, prefix="/path")
 
-app.include_router(media_service.router, prefix="v1/media")
+app.include_router(media_service.router, prefix="/v1/media")
