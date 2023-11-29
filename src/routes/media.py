@@ -54,7 +54,9 @@ class MediaServiceHandler:
         try:
             device = self.db_service.select(Device, device_id=[media.device_id])
             if not device:
-                logger.error(f"Device '{media.device_id}' does not exists")
+                err_detail = f"Device '{media.device_id}' does not exists"
+                logger.error(err_detail)
+                raise HTTPException(status_code=400, detail=err_detail)
             new_media = self.db_service.insert(MediaDB, 
                                         **media.model_dump(),
                                         owner_id=device.owner_id)
