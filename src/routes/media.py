@@ -52,7 +52,7 @@ class MediaServiceHandler:
 
     def put_media(self, media: MediaRequest) -> MediaDB:
         try:
-            device = self.db_service.select(Device, device_id=media.device_id)
+            device = self.db_service.select(Device, device_id=[media.device_id])
             if not device:
                 logger.error(f"Device '{media.device_id}' does not exists")
             new_media = self.db_service.insert(MediaDB, 

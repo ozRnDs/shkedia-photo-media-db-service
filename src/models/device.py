@@ -35,6 +35,14 @@ class Device(BaseModel, SqlModel):
         return sql_template, values
 
     @staticmethod
-    def __sql_select_item__(field_name, field_value):
-        sql_template = f"SELECT * FROM devices WHERE {field_name}=%s"
-        return sql_template, (field_value,)
+    def __sql_select_item__(field_names, field_values):
+        sql_template = f"SELECT * FROM devices WHERE"
+        search_string = []
+        sql_values=[]
+        for field_index, field_name in enumerate(field_names):
+            field_search = f"{field_name} IN (" + ",".join(["%s"]*len(field_values[field_index])) + ")"
+            search_string.append(field_search)
+            sql_values+=field_values[field_index]
+        sql_template += " "+" AND ".join(search_string)
+        return sql_template, (tuple)(sql_values)
+
