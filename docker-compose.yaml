@@ -13,3 +13,4 @@ services:
       - "4431:5000"
     volumes:
       - ${HOST_MOUNT}:/temp
+    restart: always
