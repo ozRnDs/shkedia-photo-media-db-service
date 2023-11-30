@@ -1,3 +1,9 @@
+## 0.1.2 (2023-11-30)
+
+### Fix
+
+- **routes/media/search_media**: If search_value in query is None don't add the search_field to the search_dictionary
+
 ## 0.1.1 (2023-11-30)
 
 ### Fix
