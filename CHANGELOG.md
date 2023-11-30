@@ -1,3 +1,9 @@
+## 0.1.1 (2023-11-30)
+
+### Fix
+
+- **db/service**: __connect__ funcation was missing, copied from auth service
+
 ## 0.1.0 (2023-11-29)
 
 ### Feat
