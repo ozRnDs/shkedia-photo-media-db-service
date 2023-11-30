@@ -58,15 +58,10 @@ class DBService:
                  connection_timeout: int=10
                  ) -> None:
         self.credential_file_location = credential_file_location
-        credential_object = self.__get_credentials_from_file__()
+        self.connection_timeout = connection_timeout
         try:
-            self.db_connection_object = psycopg.connect(host=credential_object["host"],
-                                                        port=credential_object["port"],
-                                                        dbname=credential_object["db_name"],
-                                                        user=credential_object["user"],
-                                                        password=credential_object["password"],
-                                                        connect_timeout=connection_timeout,
-                                                        autocommit=True)
+            self.db_connection_object: psycopg.Connection = None
+            self.__connect__()
         except Exception as err:
             logger.error(err)
             raise ConnectionError("Couldn't connect to the server")
@@ -74,6 +69,16 @@ class DBService:
             raise ConnectionError("Couldn't connect to the server")
         logger.info("Connected Successfully to the DB")
     
+    def __connect__(self):
+        credential_object = self.__get_credentials_from_file__()
+        self.db_connection_object = psycopg.connect(host=credential_object["host"],
+                        port=credential_object["port"],
+                        dbname=credential_object["db_name"],
+                        user=credential_object["user"],
+                        password=credential_object["password"],
+                        connect_timeout=self.connection_timeout,
+                        autocommit=True)
+
     def __get_credentials_from_file__(self):
         with open(self.credential_file_location, 'r') as file:
             credential_object = json.load(file)
