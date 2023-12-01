@@ -1,3 +1,9 @@
+## 0.3.0 (2023-12-01)
+
+### Feat
+
+- **routes/media**: Change the return object of search_media to SearchResult
+
 ## 0.2.0 (2023-12-01)
 
 ### Feat
