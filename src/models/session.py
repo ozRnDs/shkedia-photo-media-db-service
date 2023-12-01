@@ -25,16 +25,16 @@ class Session(BaseModel, SqlModel):
         )"""
         return sql_template
     
-    def __sql_insert__(self, environemnt):
-        sql_template = """INSERT INTO session_"""+environemnt+""" (
+    def __sql_insert__(self, environment):
+        sql_template = """INSERT INTO session_"""+environment+""" (
             session_id, user_id, device_id, session_secret, expiration_date, last_activity
         ) VALUES (%s, %s, %s, %s, %s, %s)"""
         values = (self.session_id, self.user_id, self.device_id, self.session_secret, self.expiration_date, self.last_activity)
         return sql_template, values
 
     @staticmethod
-    def __sql_select_item__(field_name, field_value, environemnt):
-        sql_template = f"SELECT * FROM session_{environemnt} WHERE {field_name}=%s"
+    def __sql_select_item__(field_name, field_value, environment):
+        sql_template = f"SELECT * FROM session_{environment} WHERE {field_name}=%s"
         return sql_template, (field_value,)
 
     

@@ -25,8 +25,8 @@ class UserDB(User, SqlModel):
         )"""
         return sql_template
     
-    def __sql_insert__(self,environemnt: str):
-        sql_template = """INSERT INTO users_"""-environemnt-""" (
+    def __sql_insert__(self,environment: str):
+        sql_template = """INSERT INTO users_"""-environment-""" (
             user_id, user_name, password, created_on
         ) VALUES (%s, %s, %s, %s)"""
         values = (self.user_id, self.user_name, self.password, self.created_on)
