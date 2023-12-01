@@ -61,7 +61,7 @@ class MediaDB(MediaResponse, SqlModel):
             media_description TEXT,
             media_width smallint,
             media_height smallint,
-            media_thumbnail VARCHAR ( 50 ),
+            media_thumbnail TEXT,
             media_thumbnail_width smallint,
             media_thumbnail_height smallint,
             created_on TIMESTAMP NOT NULL,
