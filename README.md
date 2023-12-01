@@ -78,7 +78,7 @@ UPDATE /v1/rotate_key
     ```
 1. The env can be override by the following command:
     ```bash
-    export MEDIA_DB_ENV=.local/media_db_service_$ENV.env
+    export MEDIA_DB_ENV=.local/media_db_service_${ENV}.env
     docker compose --env-file ${MEDIA_DB_ENV} up -d
     ```
 
