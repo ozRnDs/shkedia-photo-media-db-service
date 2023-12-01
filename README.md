@@ -34,7 +34,7 @@ UPDATE /v1/rotate_key
 ## Local Deployment
 1. Set the location of the credentials files on the host:
     ```bash
-    export MEDIA_DB_SERVICE_VERSION=0.0.1
+    export MEDIA_DB_SERVICE_VERSION=$(cz version -p)
     ```
 1. Create credentials token files as follows:
     ```bash
@@ -58,13 +58,18 @@ UPDATE /v1/rotate_key
     ```bash
     export CREDENTIALS_FOLDER_NAME=/temp
     export AUTH_DB_CREDENTIALS_LOCATION=$CREDENTIALS_FOLDER_NAME/postgres_credentials.json
+    export JWT_KEY_LOCATION=$CREDENTIALS_FOLDER_NAME/jwt_token
+    export ENV=dev
 
     if [ ! -d .local ]; then
         sudo mkdir .local
     fi
-    cat << EOT > .local/media_db_service.env
+    cat << EOT > .local/media_db_service_$ENV.env
     CREDENTIALS_FOLDER_NAME=$CREDENTIALS_FOLDER_NAME
     AUTH_DB_CREDENTIALS_LOCATION=$AUTH_DB_CREDENTIALS_LOCATION
+    JWT_KEY_LOCATION=$JWT_KEY_LOCATION
+    TOKEN_TIME_PERIOD=15
+    ENVIRONMENT=$ENV
     EOT
     ```
 1. Run the service using compose command:
@@ -73,7 +78,7 @@ UPDATE /v1/rotate_key
     ```
 1. The env can be override by the following command:
     ```bash
-    export MEDIA_DB_ENV=.local/media_db_service.env
+    export MEDIA_DB_ENV=.local/media_db_service_$ENV.env
     docker compose --env-file ${MEDIA_DB_ENV} up -d
     ```
 

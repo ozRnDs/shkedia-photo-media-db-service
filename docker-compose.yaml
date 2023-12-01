@@ -7,6 +7,7 @@ services:
       - AUTH_DB_CREDENTIALS_LOCATION
       - JWT_KEY_LOCATION
       - TOKEN_TIME_PERIOD
+      - ENVIRONMENT
     expose:
       - "5000"
     ports:
