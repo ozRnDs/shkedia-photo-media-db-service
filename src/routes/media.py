@@ -68,7 +68,7 @@ class MediaServiceHandler:
             raise HTTPException(status_code=500, detail="Can't create media")
 
     def get_media(self, media_id: str = None)-> MediaDB:
-        return self.search_media(request=None, search_field="media_id", search_value=media_id)
+        return self.search_media(request=None, search_field="media_id", search_value=media_id).results[0]
     
 
     def search_media(self, request: Request, search_field: str = "media_name", 
