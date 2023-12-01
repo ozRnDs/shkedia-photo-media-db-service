@@ -17,11 +17,11 @@ class Device(BaseModel, SqlModel):
     status: str = "ACTIVE"
 
     @staticmethod
-    def __sql_create_table__(environemnt: str):
-        sql_template = """CREATE TABLE IF NOT EXISTS devices_"""+environemnt+""" (
+    def __sql_create_table__(environment: str):
+        sql_template = """CREATE TABLE IF NOT EXISTS devices_"""+environment+""" (
             device_id VARCHAR ( 50 ) PRIMARY KEY,
             device_name VARCHAR ( 50 ) UNIQUE NOT NULL,
-            owner_id VARCHAR ( 50 ) NOT NULL REFERENCES users_"""+environemnt+"""(user_id),
+            owner_id VARCHAR ( 50 ) NOT NULL REFERENCES users_"""+environment+"""(user_id),
             created_on TIMESTAMP NOT NULL,
             device_status VARCHAR ( 50 )
         )"""
