@@ -1,3 +1,9 @@
+## 0.2.0 (2023-12-01)
+
+### Feat
+
+- **models**: Create tables to each environment. Base on ENVIRONMENT in the configuration
+
 ## 0.1.2 (2023-11-30)
 
 ### Fix
