@@ -27,7 +27,7 @@ class MediaServiceHandler:
 
     def __initialize_routes__(self):
         router = APIRouter(tags=["Medias"],
-                           dependencies=[Depends(self.auth_service.__get_user_from_token__)],
+                        #    dependencies=[Depends(self.auth_service.__get_user_from_token__)],
                            )
         router.add_api_route(path="", 
                              endpoint=self.put_media,

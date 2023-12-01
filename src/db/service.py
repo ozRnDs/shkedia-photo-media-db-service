@@ -11,23 +11,24 @@ from db.sql_from_model import get_table_name_from_object
 class SqlModel():
 
     @staticmethod
-    def __sql_create_table__():
+    def __sql_create_table__(environment: str):
         raise NotImplementedError()
 
-    def __sql_insert__(self):
+    def __sql_insert__(self, environment: str):
         raise NotImplementedError()
     
     @staticmethod
-    def __sql_select_item__(field_name, field_value):
+    def __sql_select_item__(field_name, field_value, environment: str):
         raise NotImplementedError()
 
-    def __sql_update_item__(self):
+    def __sql_update_item__(self, environment: str):
         raise NotImplementedError()
 
-    def __sql_delete_item__(self):
+    def __sql_delete_item__(self, environment: str):
         raise NotImplementedError()
 
     def __does_table_exists__(self):
+        raise NotImplementedError("I still don't know that. In the near future")
         table_name = get_table_name_from_object(self)
         sql_template = ...
         return ...
@@ -55,10 +56,12 @@ class DBService:
 
     def __init__(self,
                  credential_file_location: str,
-                 connection_timeout: int=10
+                 connection_timeout: int=10,
+                 environment: str = "dev"
                  ) -> None:
         self.credential_file_location = credential_file_location
         self.connection_timeout = connection_timeout
+        self.environment = environment.lower()
         try:
             self.db_connection_object: psycopg.Connection = None
             self.__connect__()
@@ -90,12 +93,12 @@ class DBService:
         return False
 
     def create_table(self, model_type: Type[TSqlModel]) -> None:
-        sql_template = model_type.__sql_create_table__()
+        sql_template = model_type.__sql_create_table__(self.environment)
         self.__execute_sql__(sql_template=sql_template, values=None, commit=True)
 
     def insert(self, model_type: Type[TSqlModel], **kargs) -> TSqlModel:
         model_object = model_type(**kargs)
-        sql_template, values = model_object.__sql_insert__()
+        sql_template, values = model_object.__sql_insert__(self.environment)
         self.__execute_sql__(sql_template=sql_template, values=values, commit=True)
         return model_object
 
@@ -105,7 +108,7 @@ class DBService:
         for search_key in search_keys:
             if not search_key in model_type.model_fields:
                 raise AttributeError(f"Invalid Search Key: {search_key}")
-        sql_template, values = model_type.__sql_select_item__(search_keys, search_values)
+        sql_template, values = model_type.__sql_select_item__(search_keys, search_values, self.environment)
         curser = self.__execute_sql__(sql_template=sql_template, values=values, get_cursor=True)
         responses = curser.fetchall()
         curser.close()
@@ -119,11 +122,11 @@ class DBService:
         return None
     
     def delete(self, model_object: TSqlModel):
-        sql_template, values = model_object.__sql_delete_item__()
+        sql_template, values = model_object.__sql_delete_item__(self.environment)
         self.__execute_sql__(sql_template=sql_template, values=values, commit=True)
 
     def update(self, current_model_object: TSqlModel, new_model_object: TSqlModel):
-        sql_template, values = current_model_object.__sql_update_item__(new_model_object)
+        sql_template, values = current_model_object.__sql_update_item__(new_model_object, self.environment)
         self.__execute_sql__(sql_template=sql_template, values=values, commit=True)
 
     def close(self):

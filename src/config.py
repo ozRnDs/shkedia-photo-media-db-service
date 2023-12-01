@@ -6,6 +6,7 @@ class ApplicationConfiguration:
 
     RECONNECT_WAIT_TIME: int = 1
     RETRY_NUMBER: int = 10
+    ENVIRONMENT: str = "DEV"
 
     # Authentication Configuration values
     JWT_KEY_LOCATION: str = "/temp/jwt_token"

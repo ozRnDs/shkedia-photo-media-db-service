@@ -22,7 +22,7 @@ app = FastAPI(description="Rest API Interface for the media db service")
 
 # Initialize all app services
 try:
-    db_service = DBService(credential_file_location=app_config.AUTH_DB_CREDENTIALS_LOCATION)
+    db_service = DBService(credential_file_location=app_config.AUTH_DB_CREDENTIALS_LOCATION, environment=app_config.ENVIRONMENT)
     db_service.create_table(UserDB)
     db_service.create_table(Device)
     db_service.create_table(Session)
