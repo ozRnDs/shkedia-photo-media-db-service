@@ -19,8 +19,8 @@ def test_put_media_device_doent_exists(client_fixture: TestClient):
     response = client_fixture.put("/v1/media", content=test_media.model_dump_json())
 
     # ASSERT
-    assert response.status_code == 500
-    assert response.json()["detail"] == "Can't create media"
+    assert response.status_code == 400
+    assert "not exists" in response.json()["detail"]
 
 def test_put_media_nominal(client_fixture: TestClient, media_request_fixture_nominal):
     # SETUP
