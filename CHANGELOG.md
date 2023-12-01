@@ -1,3 +1,10 @@
+## 0.3.1 (2023-12-01)
+
+### Fix
+
+- **models/media/sql_create_table**: Change media_thumbnail type to TEXT in the sql statement
+- **routes/media/get_media**: Return single result from SearchResult
+
 ## 0.3.0 (2023-12-01)
 
 ### Feat
