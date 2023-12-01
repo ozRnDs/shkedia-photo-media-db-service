@@ -84,12 +84,12 @@ class MediaServiceHandler:
                 search_dictionary[search_field].append(search_value)
             if search_value and not search_field in search_dictionary:
                 search_dictionary[search_field]=[search_value]
-            get_media: MediaDB = self.db_service.select(MediaDB,**search_dictionary)
+            get_media = self.db_service.select(MediaDB,**search_dictionary)
             if get_media is None:
                 raise HTTPException(status_code=404, detail="media was not found")
-            if type(get_media) == list:
-                return search_utils.page_result_formater(results=get_media, page_size=page_size,page_number=page_number)
-            return get_media
+            if not type(get_media) is list:
+                get_media=[get_media]
+            return search_utils.page_result_formater(results=get_media, page_size=page_size,page_number=page_number)
         except Exception as err:
             if type(err)==HTTPException:
                 raise err
