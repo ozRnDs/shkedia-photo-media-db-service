@@ -110,11 +110,12 @@ class DBService:
                 raise AttributeError(f"Invalid Search Key: {search_key}")
         sql_template, values = model_type.__sql_select_item__(search_keys, search_values, self.environment)
         curser = self.__execute_sql__(sql_template=sql_template, values=values, get_cursor=True)
+        columns = [desc[0] for desc in curser.description]
         responses = curser.fetchall()
         curser.close()
         models_list=[]
         for response in responses:
-            models_list.append(self.__parse_response_to_model__(model_type, response))
+            models_list.append(self.__parse_response_to_model__(model_type, response, columns))
         if len(models_list) == 1:
             return models_list[0]
         if len(models_list) > 0:
@@ -168,12 +169,9 @@ class DBService:
             raise err
  
     @staticmethod
-    def __parse_response_to_model__(model_type: Type[TSqlModel], values_list: list):
-        fields = model_type.model_fields
+    def __parse_response_to_model__(model_type: Type[TSqlModel], values_list: list, columns: list):
         kargs = {}
-        if len(fields)!=len(values_list):
-            raise AttributeError(f"Can't parse db response to the model. Got {len(values_list)} values from the DB and have {len(fields)} in the model.")
-        for field_index, field_name in enumerate(fields):
+        for field_index, field_name in enumerate(columns):
             if values_list[field_index] is None:
                 continue
             # kargs[field_name] = eval(values_list[field_index])
