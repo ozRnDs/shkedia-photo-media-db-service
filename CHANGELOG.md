@@ -1,3 +1,9 @@
+## 0.4.1 (2023-12-07)
+
+### Fix
+
+- **db/service**: Get columns names from sql and use it in __parse_response_to_model__. The fix decouples the columns order in the sql and in the python model
+
 ## 0.4.0 (2023-12-07)
 
 ### Feat
