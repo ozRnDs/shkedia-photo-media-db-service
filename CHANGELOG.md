@@ -1,3 +1,9 @@
+## 0.4.0 (2023-12-07)
+
+### Feat
+
+- **models/media**: Add exif record to media
+
 ## 0.3.1 (2023-12-01)
 
 ### Fix
