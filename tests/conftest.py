@@ -5,23 +5,70 @@ import pytest
 from fastapi.testclient import TestClient
 from datetime import datetime
 
+from unittest.mock import MagicMock
+
+import sqlalchemy
+
 sys.path.append(f"{os.getcwd()}/src")
 print(sys.path)
 
 from main import app, app_config # TODO: Figure out better way to test the app
 from models.media import MediaRequest
+from db.sqlalchemy_models import Base, User, Device, Media
+from db.service import DBService
 
 @pytest.fixture(scope="session")
-def client_fixture():
+def mock_db_service():
+    mock_db_service = DBService(credential_file_location="/temp/postgres_credentials/postgres_credentials.json")
+    mock_db_service.db_sql_engine = sqlalchemy.create_engine("sqlite://", echo=True)
+    Base.metadata.create_all(mock_db_service.db_sql_engine)
+
+    new_user = User(user_name="test", password="test", 
+                    devices=[Device(device_name="device1", 
+                                    media=[Media(media_name="media1", 
+                                                media_type="IMAGE", 
+                                                media_size_bytes=1024,
+                                                device_media_uri="uri://test_uri",
+                                                created_date=datetime(year=2023, month=8, day=25),
+                                                owner_id="dontknow"),
+                                            Media(media_name="media2", 
+                                                media_type="IMAGE", 
+                                                media_size_bytes=2048,
+                                                device_media_uri="uri://test_uri_2",
+                                                created_date=datetime(year=2023, month=8, day=20),
+                                                owner_id="dontknow")]),
+                            Device(device_name="device2",
+                                   media=[Media(media_name="media3", 
+                                                media_type="IMAGE", 
+                                                media_size_bytes=1024,
+                                                device_media_uri="uri://test_uri",
+                                                created_date=datetime(year=2023, month=8, day=10),
+                                                owner_id="dontknow"),
+                                            Media(media_name="media4", 
+                                                media_type="IMAGE", 
+                                                media_size_bytes=2048,
+                                                device_media_uri="uri://test_uri_2",
+                                                created_date=datetime(year=2023, month=10, day=25),
+                                                owner_id="dontknow")])])
+
+    mock_db_service.insert([new_user])
+
+    yield mock_db_service
+
+@pytest.fixture(scope="session")
+def jwt_key_location_fixture():
+    return "/temp/jwt_token"
+
+@pytest.fixture(scope="session")
+def client_fixture(jwt_key_location_fixture):
     app_config.AUTH_DB_CREDENTIALS_LOCATION="/temp/postgres_credentials/postgres_credentials.json"
-    app_config.JWT_KEY_LOCATION="/temp/jwt_token"
+    app_config.JWT_KEY_LOCATION=jwt_key_location_fixture
     app_config.TOKEN_TIME_PERIOD=1
     client = TestClient(app)
 
     yield client
 
     client.close()
-
 
 @pytest.fixture(scope="session")
 def media_request_fixture_device_doesnt_exist():
