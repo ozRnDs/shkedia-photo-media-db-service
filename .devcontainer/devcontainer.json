@@ -3,7 +3,7 @@
         "dockerfile": "Dockerfile",
         "context": "../"
     },
-    "forwardPorts": [5000],
-    "runArgs": [ "-v", "${localEnv:POSTGRES_CRED_LOCATION}/:/temp/", "-p", "25000:5000"],
+    "forwardPorts": [5555],
+    "runArgs": [ "-v", "${localEnv:POSTGRES_CRED_LOCATION}/:/temp/", "-p", "26000:5000"],
     "shutdownAction": "stopContainer"
 }

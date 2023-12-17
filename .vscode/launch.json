@@ -22,7 +22,8 @@
             "env": {
                 "AUTH_DB_CREDENTIALS_LOCATION": "/temp/postgres_credentials/postgres_credentials.json",
                 "JWT_KEY_LOCATION": "/temp/jwt_token",
-                "TOKEN_TIME_PERIOD": "1"
+                "TOKEN_TIME_PERIOD": "1",
+                "DEBUG": "1"
             }
         }
     ]
