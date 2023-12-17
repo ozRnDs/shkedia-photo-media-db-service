@@ -4,17 +4,18 @@ from fastapi import FastAPI
 
 import traceback
 
-
 from config import app_config
 from authentication.service import AuthService
 from db.service import DBService
 
 from routes.media import MediaServiceHandler
 
-from models.user import UserDB
-from models.device import Device
-from models.session import Session
-from models.media import MediaDB
+from db.sqlalchemy_models import Base
+
+# from models.user import UserDB
+# from models.device import Device
+# from models.session import Session
+# from models.media import MediaDB
     
 app = FastAPI(description="Rest API Interface for the media db service")
 
@@ -22,11 +23,8 @@ app = FastAPI(description="Rest API Interface for the media db service")
 
 # Initialize all app services
 try:
-    db_service = DBService(credential_file_location=app_config.AUTH_DB_CREDENTIALS_LOCATION, environment=app_config.ENVIRONMENT)
-    db_service.create_table(UserDB)
-    db_service.create_table(Device)
-    db_service.create_table(Session)
-    db_service.create_table(MediaDB)
+    db_service = DBService(credential_file_location=app_config.AUTH_DB_CREDENTIALS_LOCATION, environment=app_config.ENVIRONMENT, debug=app_config.DEBUG)
+    db_service.create_tables(Base)
 
 except Exception as err:
     app_config.logger.error(f"Failed to initialize the db. {err}")
