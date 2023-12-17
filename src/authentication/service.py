@@ -6,9 +6,12 @@ from typing import Annotated
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from datetime import timedelta, datetime
+import sqlalchemy
+from sqlalchemy.orm import Session
 
 from db.service import DBService
-from models.user import UserDB
+from db.sqlalchemy_models import User
+# from models.user import UserDB
 
 class Token(BaseModel):
     access_token: str
@@ -43,13 +46,20 @@ class AuthService:
                              )
         return router
 
+    def __get_user_from_sql__(self, username) -> User:
+        user = None
+        find_user = sqlalchemy.select(User).where(User.user_name==username)
+        with Session(self.db_service.db_sql_engine) as session:
+            user = session.execute(find_user).first()
+        return user
+
     def __log_in__(self, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-        user = self.db_service.select(UserDB, user_name=form_data.username)
+        user = self.__get_user_from_sql__(form_data.username)
         if user is None:
             raise credentials_exception
         if not self.verify_password(form_data.password, user.password):
@@ -62,7 +72,6 @@ class AuthService:
             temp_token = file.read()
         return temp_token
 
-    
     def auth_request(self, request):
         #TODO: Get user's token and check that is valid with the system's auth service
         return True
