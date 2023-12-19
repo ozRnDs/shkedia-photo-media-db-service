@@ -10,7 +10,7 @@ import sqlalchemy
 from sqlalchemy.orm import Session
 
 from db.service import DBService
-from db.sqlalchemy_models import User
+from db.sql_models import User
 # from models.user import UserDB
 
 class Token(BaseModel):

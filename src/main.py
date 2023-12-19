@@ -10,7 +10,7 @@ from db.service import DBService
 
 from routes.media import MediaServiceHandler
 
-from db.sqlalchemy_models import Base
+from db.sql_models import Base
 
 # from models.user import UserDB
 # from models.device import Device
