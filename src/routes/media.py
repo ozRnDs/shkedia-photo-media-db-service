@@ -1,16 +1,22 @@
+import sys
 import logging
 logger = logging.getLogger(__name__)
 from fastapi import APIRouter, HTTPException, status, Request, Depends
 from typing import Union, List, Annotated
 import sqlalchemy
 from sqlalchemy.orm import Session
+from enum import Enum
+
+
 # from models.user import UserDB, User
 # from models.device import Device
-from db.sqlalchemy_models import Device, Media
-from models.media import MediaDB, MediaRequest, MediaResponse
+
+
+from db.sql_models import Device, Media
+from models.media import MediaDB, MediaRequest, MediaObjectEnum, MediaIDs, MediaDevice, MediaMetadata, MediaStorage, MediaThumbnail
 from db.service import DBService
 from authentication.service import AuthService
-
+from models.parser import sql_model_to_pydantic_model
 from . import search_utils
 
 class MediaServiceHandler:
@@ -38,11 +44,11 @@ class MediaServiceHandler:
         router.add_api_route(path="/search", 
                              endpoint=self.search_media,
                              methods=["get"],
-                             response_model=Union[MediaDB,search_utils.SearchResult])
+                             response_model=search_utils.SearchResult)
         router.add_api_route(path="/{media_id}", 
                              endpoint=self.get_media,
                              methods=["get"],
-                             response_model=MediaDB)
+                             response_model=Union[MediaIDs, MediaDevice, MediaMetadata, MediaThumbnail, MediaStorage])
         router.add_api_route(path="/{media_id}", 
                              endpoint=self.delete_media,
                              methods=["delete"])
@@ -77,9 +83,10 @@ class MediaServiceHandler:
             logger.error(err)
             raise HTTPException(status_code=500, detail="Can't create media")
 
-    def get_media(self, media_id: str = None)-> MediaDB:
+    def get_media(self, media_id: str = None, response_type: MediaObjectEnum = MediaObjectEnum.MediaIDs):
+        #TODO: Rewrite using the search_media new helpers, consider adding the response_type option
         media = None
-        find_media = sqlalchemy.select(Media).where(Media.id==media_id)
+        find_media = sqlalchemy.select(Media).where(Media.media_id==media_id)
         with Session(self.db_service.db_sql_engine) as session:
             media = session.execute(find_media).first()
         return media
@@ -88,23 +95,22 @@ class MediaServiceHandler:
     def search_media(self, request: Request, search_field: str = "media_name", 
                      search_value: str = None,
                      page_size: int | None = None,
-                     page_number: int=0) -> MediaDB:
+                     page_number: int=0, response_type: MediaObjectEnum = MediaObjectEnum.MediaIDs) -> search_utils.SearchResult:
+        #TODO: Add all the Media Models to the fastapi models list.
         try:
             search_dictionary = {}
             if request:
-                search_dictionary = search_utils.extract_search_params_from_request(request.query_params.multi_items(),black_list_values=["search_field", "search_value", "page_size", "page_number"])
+                search_dictionary = search_utils.extract_search_params_from_request(request.query_params.multi_items(),black_list_values=["response_type","search_field", "search_value", "page_size", "page_number"])
             if search_value and search_field in search_dictionary:
                 search_dictionary[search_field].append(search_value)
             if search_value and not search_field in search_dictionary:
                 search_dictionary[search_field]=[search_value]
-            get_media_query = self.db_service.select(Media,**search_dictionary)
-            with Session(self.db_service.db_sql_engine) as session:
-                get_media = session.execute(get_media_query).fetchall()
+            response_type = getattr(sys.modules["models.media"], response_type.value)
+            get_media = self.db_service.select(Media,response_type,**search_dictionary)
             if get_media is None:
                 raise HTTPException(status_code=404, detail="media was not found")
             if not type(get_media) is list:
                 get_media=[get_media]
-            #TODO: Create Parser between Media to MediaDB - Concept, clean dict from attributes that are none or none existing
             return search_utils.page_result_formater(results=get_media, page_size=page_size,page_number=page_number)
         except Exception as err:
             if type(err)==HTTPException:
@@ -115,6 +121,7 @@ class MediaServiceHandler:
             raise HTTPException(status_code=500,detail="Server Internal Error")
 
     def delete_media(self, media_id: str):
+        # TODO: Refactor and adjust to sqlalchemy
         try:
             media = self.db_service.select(media, media_id=media_id)
             if media is None:
@@ -128,6 +135,7 @@ class MediaServiceHandler:
             raise HTTPException(status_code=500, detail="Can't delete media")
 
     def update_media(self, new_media: MediaDB) -> MediaDB:
+        # TODO: Refactor and adjust to sqlalchemy
         try:
             current_media = self.get_media(media_id=new_media.media_id)
             self.db_service.update(current_media,new_media)

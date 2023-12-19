@@ -35,7 +35,7 @@ class Device(Base):
 class Media(Base):
     __tablename__ = "media_"+ENVIRONMENT
 
-    id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
+    media_id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
     media_name: Mapped[str] = mapped_column(String(250))
     media_type: Mapped[str] = mapped_column(String(50))
     media_size_bytes: Mapped[int] = mapped_column(Integer)
@@ -45,7 +45,7 @@ class Media(Base):
     media_thumbnail: Mapped[Optional[str]] = mapped_column(Text)
     media_thumbnail_width: Mapped[Optional[int]] = mapped_column(SmallInteger)
     media_thumbnail_height: Mapped[Optional[int]] = mapped_column(SmallInteger)
-    created_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_on: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     device_id: Mapped[str] = mapped_column(ForeignKey("devices_"+ENVIRONMENT+".device_id"))
     device_media_uri: Mapped[str] = mapped_column(String(250))
     upload_status: Mapped[str] = mapped_column(String(50), default="PENDING") # ENUM: PENDING, UPLOADED
@@ -81,7 +81,7 @@ class Insight(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     insight_engine_id: Mapped[int] = mapped_column(ForeignKey("insight_engine_"+ENVIRONMENT+".id"))
-    media_id: Mapped[str] = mapped_column(ForeignKey("media_"+ENVIRONMENT+".id"))
+    media_id: Mapped[str] = mapped_column(ForeignKey("media_"+ENVIRONMENT+".media_id"))
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[Optional[str]] = mapped_column(String(1000))
     bounding_box: Mapped[Optional[List[int]]] = mapped_column(PickleType())
@@ -95,7 +95,7 @@ class InsightJob(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     insight_engine_id: Mapped[int] = mapped_column(ForeignKey("insight_engine_"+ENVIRONMENT+".id"))
-    media_id: Mapped[str] = mapped_column(ForeignKey("media_"+ENVIRONMENT+".id"))
+    media_id: Mapped[str] = mapped_column(ForeignKey("media_"+ENVIRONMENT+".media_id"))
     status: Mapped[str] = mapped_column(String(50), default="PENDING") # ENUM: PENDING, FAILED, DONE, CANCELED
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     end_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))

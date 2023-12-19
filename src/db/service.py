@@ -4,8 +4,9 @@ import json
 import sqlalchemy
 from typing import List
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
-from db.sqlalchemy_models import Base, DeclarativeBase
+from db.sql_models import Base, DeclarativeBase
 
 class DBService:
 
@@ -60,7 +61,13 @@ class DBService:
                 logger.error(err)
                 return False
 
-    def select(self, model_type: Base, **kargs):
+    def select(self, model_type: Base,output_model:BaseModel =None, **kargs):
+        select_list = [model_type]
+        if not output_model is None:   
+            select_dict = {field:model_type.__dict__[field] for field in output_model.model_fields if field in model_type.__dict__}
+            select_list = (list)(select_dict.values())
+            keys_list = (list)(select_dict.keys())
+
         search_keys = (list)(kargs.keys())
         search_values = (list)(kargs.values())
 
@@ -70,8 +77,20 @@ class DBService:
             search_value = (list)(search_values[index])
             search_conditions.append(search_column.in_(search_value))
 
-        return sqlalchemy.select(model_type).where(sqlalchemy.and_(*search_conditions))
-
+        sql_query = sqlalchemy.select(*select_list).where(sqlalchemy.and_(*search_conditions))
+    
+        with Session(self.db_sql_engine) as session:
+            results = session.execute(sql_query).fetchall()
+            if output_model is None:
+                results_orm = [item[0] for item in results]
+                return results_orm
+            
+            results_orm = []
+            for result in results:
+                result_dict = {keys_list[index]:value for index,value in enumerate(result) if not value is None}
+                results_orm.append(output_model(**result_dict))
+        
+        return results_orm
         for search_key in search_keys:
             if not search_key in model_type.model_fields:
                 raise AttributeError(f"Invalid Search Key: {search_key}")
