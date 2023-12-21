@@ -84,19 +84,24 @@ class MediaServiceHandler:
             raise HTTPException(status_code=500, detail="Can't create media")
 
     def get_media(self, media_id: str = None, response_type: MediaObjectEnum = MediaObjectEnum.MediaIDs):
-        #TODO: Rewrite using the search_media new helpers, consider adding the response_type option
-        media = None
-        find_media = sqlalchemy.select(Media).where(Media.media_id==media_id)
-        with Session(self.db_service.db_sql_engine) as session:
-            media = session.execute(find_media).first()
-        return media
-    
+        try:
+            response_type = getattr(sys.modules["models.media"], response_type.value)
+            find_media = self.db_service.select(Media, response_type, **{"media_id": [media_id]})
+            if find_media is None or len(find_media)==0:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="media was not found")
+            return find_media[0]
+        except Exception as err:
+            if type(err)==HTTPException:
+                raise err
+            logger.error(str(err))
+            if type(err)==AttributeError:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Server Internal Error")
 
     def search_media(self, request: Request, search_field: str = "media_name", 
                      search_value: str = None,
                      page_size: int | None = None,
                      page_number: int=0, response_type: MediaObjectEnum = MediaObjectEnum.MediaIDs) -> search_utils.SearchResult:
-        #TODO: Add all the Media Models to the fastapi models list.
         try:
             search_dictionary = {}
             if request:
@@ -134,9 +139,10 @@ class MediaServiceHandler:
             logger.error(err)
             raise HTTPException(status_code=500, detail="Can't delete media")
 
-    def update_media(self, new_media: MediaDB) -> MediaDB:
+    def update_media(self, new_media: MediaDB) -> MediaIDs:
         # TODO: Refactor and adjust to sqlalchemy
         try:
+
             current_media = self.get_media(media_id=new_media.media_id)
             self.db_service.update(current_media,new_media)
             return new_media

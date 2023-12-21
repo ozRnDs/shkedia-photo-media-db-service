@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 
-from routes.media import MediaServiceHandler, MediaIDs, MediaThumbnail, MediaObjectEnum
+from routes.media import MediaServiceHandler, MediaIDs, MediaThumbnail, MediaObjectEnum, MediaMetadata
 from routes.search_utils import SearchResult
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import HTTPException, Request
@@ -56,3 +56,25 @@ def test_search_media_nominal_mediathumbnail(media_handler_fixture):
         assert type(media) is MediaThumbnail
         assert media.media_name in ["media3", "media1"]
         assert "media_thumbnail" in media.model_fields
+
+def test_get_media_not_existing(media_handler_fixture):
+    # SETUP
+    media_id = "Doesn't Exist"
+
+    # RUN
+    with pytest.raises(HTTPException) as err:
+        media = media_handler_fixture.get_media(media_id=media_id, response_type=MediaObjectEnum.MediaMetadata)
+
+    # ASSERT
+    assert err.value.status_code == 404
+    assert "was not found" in err.value.detail
+
+def test_get_media_nominal(media_handler_fixture):
+    # SETUP
+    media_id = "id_for_test"
+
+    # RUN
+    media = media_handler_fixture.get_media(media_id=media_id, response_type=MediaObjectEnum.MediaMetadata)
+
+    # ASSERT
+    assert type(media) == MediaMetadata
