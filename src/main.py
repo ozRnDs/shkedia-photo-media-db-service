@@ -9,7 +9,7 @@ from authentication.service import AuthService
 from db.service import DBService
 
 from routes.media import MediaServiceHandler
-
+from routes.insights import InsightServiceHandler
 from db.sql_models import Base
 
 # from models.user import UserDB
@@ -33,6 +33,8 @@ try:
                                db_service=db_service,
                                default_expire_delta_min=app_config.TOKEN_TIME_PERIOD)
     media_service = MediaServiceHandler(db_service=db_service, app_logging_service=None, auth_service=auth_service)
+    insight_service = InsightServiceHandler(db_service=db_service, app_logging_service=None, auth_service=auth_service)
+
 except Exception as err:
     app_config.logger.error(f"Failed to start service. {err}")
     traceback.print_exc()
@@ -42,3 +44,4 @@ except Exception as err:
 # Example: app.include_router(new_component.router, prefix="/path")
 
 app.include_router(media_service.router, prefix="/v1/media")
+app.include_router(insight_service.router, prefix="/v2/insights")

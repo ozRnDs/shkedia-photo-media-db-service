@@ -59,14 +59,14 @@ class MediaOrm(Base):
 
     device: Mapped["DeviceOrm"] = relationship(back_populates="media")
     owner: Mapped["User"] = relationship(back_populates="media")
-    insights: Mapped[List["Insight"]] = relationship(back_populates="media")
-    insight_jobs: Mapped[List["InsightJob"]] = relationship(back_populates="media")
+    insights: Mapped[List["InsightOrm"]] = relationship(back_populates="media")
+    insight_jobs: Mapped[List["InsightJobOrm"]] = relationship(back_populates="media")
 
 
-class InsightEngine(Base):
+class InsightEngineOrm(Base):
     __tablename__ =  "insight_engine_"+ENVIRONMENT
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
     name: Mapped[str] = mapped_column(String(250))
     description: Mapped[Optional[str]] = mapped_column(Text())
     input_source: Mapped[str] = mapped_column(String(250))
@@ -74,14 +74,14 @@ class InsightEngine(Base):
     output_exchange_name: Mapped[str] = mapped_column(String(250))
     status: Mapped[str] = mapped_column(String(50), default="ACTIVE") #ENUM: ACTIVE, DEACTIVATED
 
-    jobs: Mapped[List["InsightJob"]] = relationship(back_populates="insight_engine")
-    insights: Mapped[List["Insight"]] = relationship(back_populates="insight_engine")
+    jobs: Mapped[List["InsightJobOrm"]] = relationship(back_populates="insight_engine")
+    insights: Mapped[List["InsightOrm"]] = relationship(back_populates="insight_engine")
 
-class Insight(Base):
+class InsightOrm(Base):
     __tablename__ = "insights_"+ENVIRONMENT
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    insight_engine_id: Mapped[int] = mapped_column(ForeignKey("insight_engine_"+ENVIRONMENT+".id"))
+    id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
+    insight_engine_id: Mapped[str] = mapped_column(ForeignKey("insight_engine_"+ENVIRONMENT+".id"))
     media_id: Mapped[str] = mapped_column(ForeignKey("media_"+ENVIRONMENT+".media_id"))
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[Optional[str]] = mapped_column(String(1000))
@@ -89,13 +89,13 @@ class Insight(Base):
     status: Mapped[str] = mapped_column(String(50), default="COMPUTED") # ENUM: COMPUTED, APPROVED, REJECTED
 
     media: Mapped["MediaOrm"] = relationship(back_populates="insights")
-    insight_engine: Mapped["InsightEngine"] = relationship(back_populates="insights")
+    insight_engine: Mapped["InsightEngineOrm"] = relationship(back_populates="insights")
 
-class InsightJob(Base):
+class InsightJobOrm(Base):
     __tablename__ = "insight_jobs_"+ENVIRONMENT
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    insight_engine_id: Mapped[int] = mapped_column(ForeignKey("insight_engine_"+ENVIRONMENT+".id"))
+    id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
+    insight_engine_id: Mapped[str] = mapped_column(ForeignKey("insight_engine_"+ENVIRONMENT+".id"))
     media_id: Mapped[str] = mapped_column(ForeignKey("media_"+ENVIRONMENT+".media_id"))
     status: Mapped[str] = mapped_column(String(50), default="PENDING") # ENUM: PENDING, FAILED, DONE, CANCELED
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -103,4 +103,4 @@ class InsightJob(Base):
     net_time_seconds: Mapped[Optional[int]] = mapped_column(Integer)
 
     media: Mapped["MediaOrm"] = relationship(back_populates="insight_jobs")
-    insight_engine: Mapped["InsightEngine"] = relationship(back_populates="jobs")
+    insight_engine: Mapped["InsightEngineOrm"] = relationship(back_populates="jobs")

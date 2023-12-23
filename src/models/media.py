@@ -16,7 +16,7 @@ class MediaDeviceStatus(str, Enum):
     EXISTS="EXISTS"
     DELETED="DELETED"
 
-class MediaType(str, Enum):
+class MediaTypeEnum(str, Enum):
     IMAGE="IMAGE"
     VIDEO="VIDEO"
 
@@ -33,7 +33,7 @@ class MediaIDs(BaseModel):
     owner_id: str
     created_on: datetime
     media_name: str
-    media_type: str
+    media_type: MediaTypeEnum
 
 class MediaMetadata(MediaIDs):
     media_size_bytes: int
