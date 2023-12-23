@@ -3,7 +3,7 @@ logger = logging.getLogger(__name__)
 import sys, os
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from unittest.mock import MagicMock
 
@@ -14,7 +14,7 @@ print(sys.path)
 
 from main import app, app_config # TODO: Figure out better way to test the app
 from models.media import MediaRequest
-from db.sql_models import Base, User, DeviceOrm, MediaOrm
+from db.sql_models import Base, User, DeviceOrm, MediaOrm, InsightEngineOrm, InsightOrm
 from db.service import DBService
 
 @pytest.fixture(scope="session")
@@ -24,6 +24,8 @@ def mock_db_service():
     Base.metadata.drop_all(mock_db_service.db_sql_engine)
     Base.metadata.create_all(mock_db_service.db_sql_engine)
     
+    list_of_items_to_insert = []
+
     new_user = User(user_name="test", password="test", user_id="test_user",
                     devices=[DeviceOrm(device_name="device1", device_id="test_device",
                                     media=[MediaOrm(media_name="media1", 
@@ -52,8 +54,33 @@ def mock_db_service():
                                                 device_media_uri="uri://test_uri_2",
                                                 created_on=datetime(year=2023, month=10, day=25),
                                                 owner_id="dontknow")])])
+    
+    list_of_items_to_insert.append(new_user)
 
-    mock_db_service.insert([new_user])
+    for i in range(4):
+        list_of_items_to_insert.append(InsightEngineOrm(id=f"test_engine_{i}",
+                                                        name=f"engine_{i}",
+                                                        input_source="raw.images",
+                                                        input_queue_name=f"input.engine_{i}",
+                                                        output_exchange_name=f"output.engine_{i}"))
+    for i in range(20):
+        list_of_items_to_insert.append(MediaOrm(media_name=f"media_{i}", 
+                                                media_type="IMAGE", 
+                                                media_size_bytes=1024,
+                                                device_media_uri=f"uri://test_uri_{i}",
+                                                created_on=datetime(year=2023, month=8, day=10)+timedelta(days=i),
+                                                owner_id="test",
+                                                device_id="test_device_2",
+                                                media_id=f"media_no_{i}"))
+        if i%2==0:
+            list_of_items_to_insert.append(InsightOrm(insight_engine_id=f"test_engine_{i%4}",
+                                                      media_id=f"media_no_{i}",
+                                                      name="devide_2"))
+        if i%3==0:
+            list_of_items_to_insert.append(InsightOrm(insight_engine_id=f"test_engine_{i%4}",
+                                                      media_id=f"media_no_{i}",
+                                                      name="something_3"))
+    mock_db_service.insert(list_of_items_to_insert)
 
     yield mock_db_service
 
