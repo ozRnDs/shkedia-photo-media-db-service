@@ -12,7 +12,7 @@ from enum import Enum
 # from models.device import Device
 
 
-from db.sql_models import Device, Media
+from db.sql_models import DeviceOrm, MediaOrm
 from models.media import MediaDB, MediaRequest, MediaObjectEnum, MediaIDs, MediaDevice, MediaMetadata, MediaStorage, MediaThumbnail
 from db.service import DBService
 from authentication.service import AuthService
@@ -58,25 +58,27 @@ class MediaServiceHandler:
                              response_model=MediaDB)
         return router
 
-    def __get_device_from_sql__(self, device_id) -> Device:
+    def __get_device_from_sql__(self, device_id) -> DeviceOrm:
         device = None
-        find_device = sqlalchemy.select(Device).where(Device.device_id==device_id)
+        find_device = sqlalchemy.select(DeviceOrm).where(DeviceOrm.device_id==device_id)
         with Session(self.db_service.db_sql_engine) as session:
             device = session.execute(find_device).first()
         return device
 
-    def put_media(self, media: MediaRequest) -> MediaDB:
+    def put_media(self, media_list: List[MediaRequest]) -> List[MediaIDs]:
         try:
-            device = self.__get_device_from_sql__(self, media.device_id)
-            if not device:
-                err_detail = f"Device '{media.device_id}' does not exists"
+            # device = self.__get_device_from_sql__(self, media.device_id)
+            devices_ids = list(set([media.device_id for media in media_list]))
+            devices = self.db_service.select(DeviceOrm,device_id=devices_ids)
+            if len(devices)==0:
+                err_detail = f"No device was found for the requested media"
                 logger.error(err_detail)
                 raise HTTPException(status_code=400, detail=err_detail)
-            raise NotImplementedError("Need to create the SQL Model here")
-            new_media = self.db_service.insert(MediaDB, 
-                                        **media.model_dump(),
-                                        owner_id=device.owner_id)
-            return new_media
+            devices_dict = {device.device_id:device.owner_id for device in devices}
+            media_list = [MediaOrm(owner_id=devices_dict[media.device_id], **media.model_dump()) for media in media_list]
+            if self.db_service.insert(media_list):
+                return [MediaIDs(**media.__dict__) for media in media_list]
+            raise HTTPException(status_code=500, detail="Couldn't insert the media")
         except Exception as err:
             if type(err) == HTTPException:
                 raise err
@@ -86,7 +88,7 @@ class MediaServiceHandler:
     def get_media(self, media_id: str = None, response_type: MediaObjectEnum = MediaObjectEnum.MediaIDs):
         try:
             response_type = getattr(sys.modules["models.media"], response_type.value)
-            find_media = self.db_service.select(Media, response_type, **{"media_id": [media_id]})
+            find_media = self.db_service.select(MediaOrm, response_type, **{"media_id": [media_id]})
             if find_media is None or len(find_media)==0:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="media was not found")
             return find_media[0]
@@ -111,7 +113,7 @@ class MediaServiceHandler:
             if search_value and not search_field in search_dictionary:
                 search_dictionary[search_field]=[search_value]
             response_type = getattr(sys.modules["models.media"], response_type.value)
-            get_media = self.db_service.select(Media,response_type,**search_dictionary)
+            get_media = self.db_service.select(MediaOrm,response_type,**search_dictionary)
             if get_media is None:
                 raise HTTPException(status_code=404, detail="media was not found")
             if not type(get_media) is list:
@@ -140,9 +142,8 @@ class MediaServiceHandler:
             raise HTTPException(status_code=500, detail="Can't delete media")
 
     def update_media(self, new_media: MediaDB) -> MediaIDs:
-        # TODO: Refactor and adjust to sqlalchemy
         try:
-            updated_object = self.db_service.update(new_media, object_to_update=Media, select_by_field="media_id")
+            updated_object = self.db_service.update(new_media, object_to_update=MediaOrm, select_by_field="media_id")
             return sql_model_to_pydantic_model(updated_object, MediaIDs)
         except Exception as err:
             if type(err)==HTTPException:

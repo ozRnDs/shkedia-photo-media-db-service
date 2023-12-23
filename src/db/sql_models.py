@@ -18,10 +18,10 @@ class User(Base):
     user_name: Mapped[str] = mapped_column(String(50), unique=True)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     password: Mapped[str] = mapped_column(String(250))
-    devices: Mapped[List["Device"]] = relationship(back_populates="owner")
-    media: Mapped[List["Media"]] = relationship(back_populates="owner")
+    devices: Mapped[List["DeviceOrm"]] = relationship(back_populates="owner")
+    media: Mapped[List["MediaOrm"]] = relationship(back_populates="owner")
 
-class Device(Base):
+class DeviceOrm(Base):
     __tablename__ = "devices_"+ENVIRONMENT
 
     device_id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
@@ -30,9 +30,9 @@ class Device(Base):
     device_status: Mapped[str] = mapped_column(String(50), default="ACTIVE") # ENUM: ACTIVE, DEACTIVATED
     owner_id: Mapped[str] = mapped_column(ForeignKey("users_"+ENVIRONMENT+".user_id"))
     owner: Mapped["User"] = relationship(back_populates="devices")
-    media: Mapped[List["Media"]] = relationship(back_populates="device")
+    media: Mapped[List["MediaOrm"]] = relationship(back_populates="device")
 
-class Media(Base):
+class MediaOrm(Base):
     __tablename__ = "media_"+ENVIRONMENT
 
     media_id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
@@ -45,6 +45,7 @@ class Media(Base):
     media_thumbnail: Mapped[Optional[str]] = mapped_column(Text)
     media_thumbnail_width: Mapped[Optional[int]] = mapped_column(SmallInteger)
     media_thumbnail_height: Mapped[Optional[int]] = mapped_column(SmallInteger)
+    exif: Mapped[Optional[str]] = mapped_column(Text)
     created_on: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     device_id: Mapped[str] = mapped_column(ForeignKey("devices_"+ENVIRONMENT+".device_id"))
     device_media_uri: Mapped[str] = mapped_column(String(250))
@@ -56,7 +57,7 @@ class Media(Base):
     storage_media_uri: Mapped[Optional[str]] = mapped_column(String(50))
     media_key: Mapped[Optional[str]] = mapped_column(String(2048))
 
-    device: Mapped["Device"] = relationship(back_populates="media")
+    device: Mapped["DeviceOrm"] = relationship(back_populates="media")
     owner: Mapped["User"] = relationship(back_populates="media")
     insights: Mapped[List["Insight"]] = relationship(back_populates="media")
     insight_jobs: Mapped[List["InsightJob"]] = relationship(back_populates="media")
@@ -87,7 +88,7 @@ class Insight(Base):
     bounding_box: Mapped[Optional[List[int]]] = mapped_column(PickleType())
     status: Mapped[str] = mapped_column(String(50), default="COMPUTED") # ENUM: COMPUTED, APPROVED, REJECTED
 
-    media: Mapped["Media"] = relationship(back_populates="insights")
+    media: Mapped["MediaOrm"] = relationship(back_populates="insights")
     insight_engine: Mapped["InsightEngine"] = relationship(back_populates="insights")
 
 class InsightJob(Base):
@@ -101,5 +102,5 @@ class InsightJob(Base):
     end_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     net_time_seconds: Mapped[Optional[int]] = mapped_column(Integer)
 
-    media: Mapped["Media"] = relationship(back_populates="insight_jobs")
+    media: Mapped["MediaOrm"] = relationship(back_populates="insight_jobs")
     insight_engine: Mapped["InsightEngine"] = relationship(back_populates="jobs")

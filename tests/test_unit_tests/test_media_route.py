@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 
-from routes.media import MediaServiceHandler, MediaIDs, MediaThumbnail, MediaObjectEnum, MediaMetadata, MediaDB
+from routes.media import MediaServiceHandler, MediaIDs, MediaThumbnail, MediaObjectEnum, MediaMetadata, MediaDB, MediaRequest
 from routes.search_utils import SearchResult
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import HTTPException, Request
@@ -95,3 +95,27 @@ def test_update_media_nominal(media_handler_fixture):
     get_media: MediaMetadata = media_handler_fixture.get_media(media_id="id_for_test", response_type=MediaObjectEnum.MediaMetadata)
     assert get_media.media_description == new_object_values.media_description
     assert get_media.media_description != old_description
+
+def test_put_media_nominal(media_handler_fixture):
+    # SETUP
+    new_media = [MediaRequest(media_name="Test Media", media_type="IMAGE", media_size_bytes=1024,
+                            created_on=datetime(year=1955,month=12,day=3,hour=13,minute=20),
+                            device_id="test_device",device_media_uri="/this/is/test/1"),
+                MediaRequest(media_name="Test Media2", media_type="IMAGE", media_size_bytes=1024,
+                            created_on=datetime(year=1955,month=12,day=3,hour=13,minute=21),
+                            device_id="test_device",device_media_uri="/this/is/test/2"),
+                MediaRequest(media_name="Test Media3", media_type="IMAGE", media_size_bytes=1024,
+                            created_on=datetime(year=1955,month=12,day=3,hour=13,minute=21),
+                            device_id="test_device_2",device_media_uri="/this/is/test/2")
+                            ]
+    
+    # RUN
+    updated_media = media_handler_fixture.put_media(new_media)
+
+    # ASSERT
+    assert len(updated_media) == len(new_media)
+    for index, media in enumerate(updated_media):
+        assert media.owner_id == "test_user"
+        assert not media.media_id is None
+        assert media.media_name == new_media[index].media_name
+        assert media.created_on == new_media[index].created_on

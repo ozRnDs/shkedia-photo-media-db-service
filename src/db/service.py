@@ -53,6 +53,7 @@ class DBService:
     def insert(self, items: List[Base]) -> bool:
         with Session(self.db_sql_engine) as session:
             try:
+                session.expire_on_commit=False
                 session.add_all(items)
                 session.commit()
                 return True

@@ -14,7 +14,7 @@ print(sys.path)
 
 from main import app, app_config # TODO: Figure out better way to test the app
 from models.media import MediaRequest
-from db.sql_models import Base, User, Device, Media
+from db.sql_models import Base, User, DeviceOrm, MediaOrm
 from db.service import DBService
 
 @pytest.fixture(scope="session")
@@ -24,29 +24,29 @@ def mock_db_service():
     Base.metadata.drop_all(mock_db_service.db_sql_engine)
     Base.metadata.create_all(mock_db_service.db_sql_engine)
     
-    new_user = User(user_name="test", password="test", 
-                    devices=[Device(device_name="device1", 
-                                    media=[Media(media_name="media1", 
+    new_user = User(user_name="test", password="test", user_id="test_user",
+                    devices=[DeviceOrm(device_name="device1", device_id="test_device",
+                                    media=[MediaOrm(media_name="media1", 
                                                 media_type="IMAGE", 
                                                 media_size_bytes=1024,
                                                 device_media_uri="uri://test_uri",
                                                 created_on=datetime(year=2023, month=8, day=25),
                                                 owner_id="dontknow"),
-                                            Media(media_name="media2", 
+                                            MediaOrm(media_name="media2", 
                                                 media_type="IMAGE", 
                                                 media_size_bytes=2048,
                                                 device_media_uri="uri://test_uri_2",
                                                 created_on=datetime(year=2023, month=8, day=20),
                                                 owner_id="dontknow")]),
-                            Device(device_name="device2",
-                                   media=[Media(media_name="media3", 
+                            DeviceOrm(device_name="device2", device_id="test_device_2",
+                                   media=[MediaOrm(media_name="media3", 
                                                 media_type="IMAGE", 
                                                 media_size_bytes=1024,
                                                 device_media_uri="uri://test_uri",
                                                 created_on=datetime(year=2023, month=8, day=10),
                                                 owner_id="dontknow",
                                                 media_id="id_for_test"),
-                                            Media(media_name="media4", 
+                                            MediaOrm(media_name="media4", 
                                                 media_type="IMAGE", 
                                                 media_size_bytes=2048,
                                                 device_media_uri="uri://test_uri_2",
