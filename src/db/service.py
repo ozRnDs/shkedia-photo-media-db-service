@@ -106,9 +106,10 @@ class DBService:
             session.expire_on_commit = False
             result = session.scalars(update_query).first()
             if not result:
-                raise FileNotFoundError(f"Could not find the object to update. {search_in_field}=={value_of_field}")
+                raise FileNotFoundError(f"Could not find an object to update. {search_in_field}=={value_of_field}")
             for field, value in new_model_object.model_dump().items():
-                setattr(result,field,value)
+                if value != getattr(result,field):
+                    setattr(result,field,value)
             # session.flush()
             session.commit()
         return result

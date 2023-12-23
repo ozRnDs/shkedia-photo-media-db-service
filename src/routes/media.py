@@ -40,7 +40,7 @@ class MediaServiceHandler:
         router.add_api_route(path="", 
                              endpoint=self.put_media,
                              methods=["put"],
-                             response_model=MediaDB)
+                             response_model=List[MediaIDs])
         router.add_api_route(path="/search", 
                              endpoint=self.search_media,
                              methods=["get"],
@@ -49,25 +49,18 @@ class MediaServiceHandler:
                              endpoint=self.get_media,
                              methods=["get"],
                              response_model=Union[MediaIDs, MediaDevice, MediaMetadata, MediaThumbnail, MediaStorage])
-        router.add_api_route(path="/{media_id}", 
-                             endpoint=self.delete_media,
-                             methods=["delete"])
+        # router.add_api_route(path="/{media_id}", 
+        #                      endpoint=self.delete_media,
+        #                      methods=["delete"])
         router.add_api_route(path="/{media_id}", 
                              endpoint=self.update_media,
                              methods=["post"],
-                             response_model=MediaDB)
+                             response_model=MediaIDs)
         return router
 
-    def __get_device_from_sql__(self, device_id) -> DeviceOrm:
-        device = None
-        find_device = sqlalchemy.select(DeviceOrm).where(DeviceOrm.device_id==device_id)
-        with Session(self.db_service.db_sql_engine) as session:
-            device = session.execute(find_device).first()
-        return device
 
     def put_media(self, media_list: List[MediaRequest]) -> List[MediaIDs]:
         try:
-            # device = self.__get_device_from_sql__(self, media.device_id)
             devices_ids = list(set([media.device_id for media in media_list]))
             devices = self.db_service.select(DeviceOrm,device_id=devices_ids)
             if len(devices)==0:

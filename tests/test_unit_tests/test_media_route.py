@@ -86,8 +86,8 @@ def test_update_media_nominal(media_handler_fixture):
     old_description = get_media_before.media_description
 
     new_object_values = MediaDB(media_id="id_for_test", media_description="The is updated media", 
-                                created_on=datetime.now(), device_id="test", device_media_uri="Another Test", 
-                                owner_id="Someone", media_type="IMAEG", media_size_bytes=1024, media_name="Testing the media")
+                                created_on=datetime.now(), device_id="test", device_media_uri="uri://test_uri", 
+                                owner_id="Someone", media_type="IMAGE", media_size_bytes=1024, media_name="media3", media_width=800, media_height=800)
     # RUN
     result = media_handler_fixture.update_media(new_object_values)
     # Assert
@@ -95,6 +95,8 @@ def test_update_media_nominal(media_handler_fixture):
     get_media: MediaMetadata = media_handler_fixture.get_media(media_id="id_for_test", response_type=MediaObjectEnum.MediaMetadata)
     assert get_media.media_description == new_object_values.media_description
     assert get_media.media_description != old_description
+    assert get_media.media_width == 800
+    assert get_media.media_height == 800
 
 def test_put_media_nominal(media_handler_fixture):
     # SETUP
