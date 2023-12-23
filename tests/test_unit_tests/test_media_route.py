@@ -1,10 +1,11 @@
 import pytest
 from unittest.mock import MagicMock
 
-from routes.media import MediaServiceHandler, MediaIDs, MediaThumbnail, MediaObjectEnum, MediaMetadata
+from routes.media import MediaServiceHandler, MediaIDs, MediaThumbnail, MediaObjectEnum, MediaMetadata, MediaDB
 from routes.search_utils import SearchResult
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import HTTPException, Request
+from datetime import datetime
 
 @pytest.fixture(scope="module")
 def media_handler_fixture(jwt_key_location_fixture, mock_db_service):
@@ -78,3 +79,19 @@ def test_get_media_nominal(media_handler_fixture):
 
     # ASSERT
     assert type(media) == MediaMetadata
+
+def test_update_media_nominal(media_handler_fixture):
+    # SETUP
+    get_media_before: MediaMetadata = media_handler_fixture.get_media(media_id="id_for_test", response_type=MediaObjectEnum.MediaMetadata)
+    old_description = get_media_before.media_description
+
+    new_object_values = MediaDB(media_id="id_for_test", media_description="The is updated media", 
+                                created_on=datetime.now(), device_id="test", device_media_uri="Another Test", 
+                                owner_id="Someone", media_type="IMAEG", media_size_bytes=1024, media_name="Testing the media")
+    # RUN
+    result = media_handler_fixture.update_media(new_object_values)
+    # Assert
+    assert result.media_id == new_object_values.media_id
+    get_media: MediaMetadata = media_handler_fixture.get_media(media_id="id_for_test", response_type=MediaObjectEnum.MediaMetadata)
+    assert get_media.media_description == new_object_values.media_description
+    assert get_media.media_description != old_description

@@ -142,10 +142,8 @@ class MediaServiceHandler:
     def update_media(self, new_media: MediaDB) -> MediaIDs:
         # TODO: Refactor and adjust to sqlalchemy
         try:
-
-            current_media = self.get_media(media_id=new_media.media_id)
-            self.db_service.update(current_media,new_media)
-            return new_media
+            updated_object = self.db_service.update(new_media, object_to_update=Media, select_by_field="media_id")
+            return sql_model_to_pydantic_model(updated_object, MediaIDs)
         except Exception as err:
             if type(err)==HTTPException:
                 raise err

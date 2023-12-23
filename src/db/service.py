@@ -91,30 +91,26 @@ class DBService:
                 results_orm.append(output_model(**result_dict))
         
         return results_orm
-        for search_key in search_keys:
-            if not search_key in model_type.model_fields:
-                raise AttributeError(f"Invalid Search Key: {search_key}")
-        sql_template, values = model_type.__sql_select_item__(search_keys, search_values, self.environment)
-        curser = self.__execute_sql__(sql_template=sql_template, values=values, get_cursor=True)
-        columns = [desc[0] for desc in curser.description]
-        responses = curser.fetchall()
-        curser.close()
-        models_list=[]
-        for response in responses:
-            models_list.append(self.__parse_response_to_model__(model_type, response, columns))
-        if len(models_list) == 1:
-            return models_list[0]
-        if len(models_list) > 0:
-            return models_list
-        return None
+
     
     # def delete(self, items: List[Base]):
     #     sql_template, values = model_object.__sql_delete_item__(self.environment)
     #     self.__execute_sql__(sql_template=sql_template, values=values, commit=True)
 
-    # def update(self, current_model_object: TSqlModel, new_model_object: TSqlModel):
-    #     sql_template, values = current_model_object.__sql_update_item__(new_model_object, self.environment)
-    #     self.__execute_sql__(sql_template=sql_template, values=values, commit=True)
+    def update(self, new_model_object: BaseModel, object_to_update, select_by_field):
+        search_in_field = object_to_update.__dict__[select_by_field]
+        value_of_field = new_model_object.model_dump()[select_by_field]
+        update_query = sqlalchemy.select(object_to_update).where(search_in_field==value_of_field)
+        with Session(self.db_sql_engine) as session:
+            session.expire_on_commit = False
+            result = session.scalars(update_query).first()
+            if not result:
+                raise FileNotFoundError(f"Could not find the object to update. {search_in_field}=={value_of_field}")
+            for field, value in new_model_object.model_dump().items():
+                setattr(result,field,value)
+            # session.flush()
+            session.commit()
+        return result
 
     # def close(self):
     #     if not self.db_sql_engine:
