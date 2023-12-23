@@ -71,7 +71,8 @@ def mock_db_service():
                                                 created_on=datetime(year=2023, month=8, day=10)+timedelta(days=i),
                                                 owner_id="test",
                                                 device_id="test_device_2",
-                                                media_id=f"media_no_{i}"))
+                                                media_id=f"media_no_{i}",
+                                                media_thumbnail=f"Thumbnail_id_{i}"))
         if i%2==0:
             list_of_items_to_insert.append(InsightOrm(insight_engine_id=f"test_engine_{i%4}",
                                                       media_id=f"media_no_{i}",

@@ -62,9 +62,9 @@ class CollectionServiceHandler:
             logger.error(str(err))
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Sorry, Something is wrong. Try again later")
 
-    def get_collection(self, collection_name: str = None, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
+    def get_collection(self, collection_name: str = None) -> List[CollectionMedia]: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
         try:
-            response_type = getattr(sys.modules["models.collection"], response_type.value)
+            # response_type = getattr(sys.modules["models.collection"], response_type.value)
             insight_table = sqlalchemy.alias(InsightOrm)
             engine_table = sqlalchemy.alias(InsightEngineOrm)
             media_table = sqlalchemy.alias(MediaOrm)
@@ -84,7 +84,15 @@ class CollectionServiceHandler:
                     if not key in results_dict:
                         results_dict[key]=CollectionMedia(name=collection_name, engine_name=engine_name)
                     results_dict[key].media_list.append(media_id)
-            return (list)(results_dict.values())
+                results=(list)(results_dict.values())
+                media_ids = [result.media_list[0] for result in results]
+                get_thumbnail_query = sqlalchemy.select(MediaOrm.media_id,MediaOrm.media_thumbnail).where(MediaOrm.media_id.in_(media_ids))
+                thumbnails = session.execute(get_thumbnail_query).fetchall()
+                for index, media in enumerate(thumbnails):
+                    for result in results:
+                        if result.thumbnail is None and media.media_id in result.media_list:
+                            result.thumbnail = media.media_thumbnail
+            return results
         except Exception as err:
             logger.error(str(err))
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Sorry, Something is wrong. Try again later")
