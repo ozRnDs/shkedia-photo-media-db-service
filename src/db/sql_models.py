@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import String, ForeignKey, Text, DateTime, Enum, Integer, SmallInteger, PickleType
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -6,7 +7,7 @@ from uuid import uuid4
 
 from datetime import datetime
 
-ENVIRONMENT = "dev0"
+ENVIRONMENT = os.environ.get("ENVIRONMENT")
 
 class Base(DeclarativeBase):
     pass
