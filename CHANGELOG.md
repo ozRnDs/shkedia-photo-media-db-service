@@ -1,3 +1,29 @@
+## 0.5.0 (2023-12-25)
+
+### Feat
+
+- **logics/collections,routes/collections**: Add a collection routes for getting media per collection and engine
+- **insights**: Add route to handle that basic CRUd actions of the insights objects
+- **routes/media,models/media,db/sql_models,db/service**: Improve the search flexiblity. Can return from the sql only the information needed for the request
+
+### Fix
+
+- **routes/media/get_media**: Adjust the route to sqlalchemy and use multiple return types
+- **main,authentication/service**: Change the sqlalchemy_models to sql_models
+
+### Refactor
+
+- **logic/collection,route/collection**: Fix and Refactor get_collection in the route/collection. Extract the logics to different service
+- **routes/collections**: Extract thumbnail for all collections with one query
+- **models/collection,-routes/collection**: Create the basics of the collections. Not connected to the main.py yet
+- **routes/media,db/service**: Update the routes response_models, disable the delete route and update only changed columns
+- **routes/media,db,tests/conftest,tests/test_media_route**: Refactor the put_media route to use sqlalchemy
+- **routes/media,db/service**: Create sqlalchemy implementation to the update route for medias
+- **models/parser**: Create general parser that converts any sql orm (Base) to any pydantic object (BaseModel)
+- **main,config,models/media,routes/media**: Adjust to sqlalchemy. Not done with the models and routes
+- **authentication/service**: Adjust to sqlalchemy
+- **db**: Use sqlalchemy in the db instead of pure sql code
+
 ## 0.4.1 (2023-12-07)
 
 ### Fix
