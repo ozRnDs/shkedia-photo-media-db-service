@@ -14,6 +14,7 @@ from enum import Enum
 from db.sql_models import InsightEngineOrm, InsightOrm, MediaOrm
 from models.collection import CollectionBasic, CollectionMedia, CollectionObjectEnum
 from db.service import DBService
+from logics.collections import CollectionLogicService
 from authentication.service import AuthService
 from models.parser import sql_model_to_pydantic_model
 from . import search_utils
@@ -22,11 +23,13 @@ class CollectionServiceHandler:
     def __init__(self, 
                  db_service: DBService,
                  app_logging_service,
-                 auth_service: AuthService
+                 auth_service: AuthService,
+                 collection_logics: CollectionLogicService
                  ):
         self.db_service = db_service
         self.logging_service = app_logging_service
         self.auth_service = auth_service
+        self.collection_logics = collection_logics
         if not self.db_service.is_ready():
             raise Exception("Can't initializes without db_service")
         self.router = self.__initialize_routes__()
@@ -43,7 +46,7 @@ class CollectionServiceHandler:
         router.add_api_route(path="/{collection_name}",
                              endpoint=self.get_collection,
                              methods=["get"],
-                             response_model=Union[CollectionBasic, CollectionMedia])
+                             response_model=Union[List[CollectionBasic],List[CollectionMedia]])
         router.add_api_route(path="/search",
                              endpoint=self.search_collection,
                              methods=["get"],
@@ -64,38 +67,19 @@ class CollectionServiceHandler:
 
     def get_collection(self, collection_name: str = None) -> List[CollectionMedia]: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
         try:
-            # response_type = getattr(sys.modules["models.collection"], response_type.value)
-            insight_table = sqlalchemy.alias(InsightOrm)
-            engine_table = sqlalchemy.alias(InsightEngineOrm)
-            media_table = sqlalchemy.alias(MediaOrm)
-            sql_query = sqlalchemy.select(insight_table.c.name, 
-                                          engine_table.c.name, 
-                                          media_table.c.media_id).join(engine_table, 
-                                                                       insight_table.c.insight_engine_id == engine_table.c.id).join(media_table,
-                                                                                                                                    media_table.c.media_id==insight_table.c.media_id).where(insight_table.c.name==collection_name)
-            results_dict = {}
-            with Session(self.db_service.db_sql_engine) as session:
-                results = session.execute(sql_query).fetchall()
-                for result in results:
-                    collection_name = result[0]
-                    engine_name = result[1]
-                    media_id = result[2]
-                    key = f"{engine_name}_{collection_name}"
-                    if not key in results_dict:
-                        results_dict[key]=CollectionMedia(name=collection_name, engine_name=engine_name)
-                    results_dict[key].media_list.append(media_id)
-                results=(list)(results_dict.values())
-                media_ids = [result.media_list[0] for result in results]
-                get_thumbnail_query = sqlalchemy.select(MediaOrm.media_id,MediaOrm.media_thumbnail).where(MediaOrm.media_id.in_(media_ids))
-                thumbnails = session.execute(get_thumbnail_query).fetchall()
-                for index, media in enumerate(thumbnails):
-                    for result in results:
-                        if result.thumbnail is None and media.media_id in result.media_list:
-                            result.thumbnail = media.media_thumbnail
+            #TODO: Connect to collection logics
+            results_dict = self.collection_logics.get_collections_metadata_by_names([collection_name])
+            results=(list)(results_dict.values())
+            if len(results)==0:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The collection was not found")
             return results
         except Exception as err:
+            if type(err)==HTTPException:
+                raise err
             logger.error(str(err))
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Sorry, Something is wrong. Try again later")
+            if type(err)==AttributeError:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
+            raise HTTPException(status_code=500,detail="Server Internal Error")
 
     def search_collection(self, request: Request, search_field: str = "name", 
                      search_value: str = None,
