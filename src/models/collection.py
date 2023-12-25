@@ -4,16 +4,18 @@ from uuid import uuid4
 from datetime import datetime
 
 from enum import Enum
+from .media import MediaThumbnail
+
 
 class CollectionObjectEnum(str, Enum):
     CollectionBasic="CollectionBasic"
-    CollectionMedia="CollectionMedia"
+    CollectionPreview="CollectionPreview"
 
 
 class CollectionBasic(BaseModel):
     name: str
     engine_name: str
 
-class CollectionMedia(CollectionBasic):
+class CollectionPreview(CollectionBasic):
     media_list: List[str] = []
     thumbnail: str | None = None

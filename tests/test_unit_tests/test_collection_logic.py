@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from unittest.mock import MagicMock
 
 from logics.collections import CollectionLogicService
-from routes.collections import CollectionServiceHandler, CollectionBasic, CollectionMedia, CollectionObjectEnum
+from routes.collections import CollectionServiceHandler, CollectionBasic, CollectionPreview, CollectionObjectEnum
 from routes import search_utils
 
 @pytest.fixture(scope="module")
@@ -23,5 +23,5 @@ def test_get_collections_metadata_by_names_nominal(collection_logic_fixture):
     # ASSERT
     assert len(results) == 6
     for _,result in results.items():
-        assert type(result) == CollectionMedia
+        assert type(result) == CollectionPreview
         assert result.name in search_in_list

@@ -12,9 +12,9 @@ from enum import Enum
 
 
 from db.sql_models import InsightEngineOrm, InsightOrm, MediaOrm
-from models.collection import CollectionBasic, CollectionMedia, CollectionObjectEnum
+from models.collection import CollectionBasic, CollectionPreview, CollectionObjectEnum
 from db.service import DBService
-from logics.collections import CollectionLogicService
+from logics.collections import CollectionLogicService, CollectionSearchField
 from authentication.service import AuthService
 from models.parser import sql_model_to_pydantic_model
 from . import search_utils
@@ -38,17 +38,18 @@ class CollectionServiceHandler:
     def __initialize_routes__(self):
         router = APIRouter(tags=["collection"],
                         #    dependencies=[Depends(self.auth_service.__get_user_from_token__)],
+                           prefix=""
                            )
         router.add_api_route(path="/all",
                              endpoint=self.get_collections_list,
                              methods=["get"],
                              response_model=List[CollectionBasic])
-        router.add_api_route(path="/{collection_name}",
-                             endpoint=self.get_collection,
+        router.add_api_route(path="/{collection_name}/{page_number}",
+                             endpoint=self.get_collection_by_name,
                              methods=["get"],
-                             response_model=Union[List[CollectionBasic],List[CollectionMedia]])
+                             response_model=Union[List[CollectionBasic],List[CollectionPreview]])
         router.add_api_route(path="/search",
-                             endpoint=self.search_collection,
+                             endpoint=self.get_collection_by_engine,
                              methods=["get"],
                              response_model=search_utils.SearchResult)
         return router
@@ -65,13 +66,11 @@ class CollectionServiceHandler:
             logger.error(str(err))
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Sorry, Something is wrong. Try again later")
 
-    def get_collection(self, collection_name: str = None) -> List[CollectionMedia]: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
+    def get_collection_by_engine(self, engine_name: str = None, page_number: int = None, page_size: int=16) -> search_utils.SearchResult:
         try:
-            results_dict = self.collection_logics.get_collections_metadata_by_names([collection_name])
+            results_dict = self.collection_logics.get_collections_metadata_by_names([engine_name], field_name=CollectionSearchField.ENGINE_NAME)
             results=(list)(results_dict.values())
-            if len(results)==0:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The collection was not found")
-            return results
+            return 
         except Exception as err:
             if type(err)==HTTPException:
                 raise err
@@ -80,8 +79,19 @@ class CollectionServiceHandler:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
             raise HTTPException(status_code=500,detail="Server Internal Error")
 
-    def search_collection(self, request: Request, search_field: str = "name", 
-                     search_value: str = None,
-                     page_size: int | None = None,
-                     page_number: int=0, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic) -> search_utils.SearchResult:
-        pass
+
+    def get_collection_by_name(self, collection_name: str = None, page_number: int = None, page_size: int = 16) -> List[CollectionPreview]: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
+        try:
+            results_dict = self.collection_logics.get_collections_metadata_by_names([collection_name])
+            results=(list)(results_dict.values())
+            if len(results)==0:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The collection was not found")
+            return search_utils.page_result_formater(results,page_size,page_number)
+        except Exception as err:
+            if type(err)==HTTPException:
+                raise err
+            logger.error(str(err))
+            if type(err)==AttributeError:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
+            raise HTTPException(status_code=500,detail="Server Internal Error")
+
