@@ -67,7 +67,6 @@ class CollectionServiceHandler:
 
     def get_collection(self, collection_name: str = None) -> List[CollectionMedia]: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
         try:
-            #TODO: Connect to collection logics
             results_dict = self.collection_logics.get_collections_metadata_by_names([collection_name])
             results=(list)(results_dict.values())
             if len(results)==0:

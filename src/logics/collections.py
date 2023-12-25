@@ -47,14 +47,14 @@ class CollectionLogicService:
                     results_dict[key]=CollectionMedia(name=temp_collection_name, engine_name=engine_name)
                 results_dict[key].media_list.append(media_id)
             media_ids = [result.media_list[0] for _,result in results_dict.items()]
-            thumbnails = self.get_thumbnails_for_medias(media_ids=media_ids,session=session)
+            thumbnails = self.__get_thumbnails_for_medias__(media_ids=media_ids,session=session)
             for index, media in enumerate(thumbnails):
                 for _,result in results_dict.items():
                     if result.thumbnail is None and media.media_id in result.media_list:
                         result.thumbnail = media.media_thumbnail
             return results_dict
 
-    def get_thumbnails_for_medias(self,media_ids: List[str], session: Session = None) -> Dict[str,str]:
+    def __get_thumbnails_for_medias__(self,media_ids: List[str], session: Session = None) -> Dict[str,str]:
         session_existed = True if session else False
         if not session:
             session = Session(self.db_service.db_sql_engine)
