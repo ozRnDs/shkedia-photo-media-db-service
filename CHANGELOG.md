@@ -1,3 +1,14 @@
+## 0.6.0 (2023-12-28)
+
+### Feat
+
+- **routes/jobs**: Added new routes for searching and creating jobs and medias without jobs
+
+### Refactor
+
+- **db/service**: Create helper functions that converts between the Pydantic to the sqlalchemy queries inputs and outputs
+- **models/media**: Move the field upload_status from MediaDevice to MediaIDs
+
 ## 0.5.1 (2023-12-25)
 
 ### Fix
