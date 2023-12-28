@@ -84,6 +84,20 @@ class DBService:
         
         return results_orm
 
+    def get_columns_from_models(self,model_type: Base, output_model:BaseModel=None):
+        select_list = [model_type]
+        if not output_model is None:   
+            select_dict = {field:model_type.__dict__[field] for field in output_model.model_fields if field in model_type.__dict__}
+            select_list = (list)(select_dict.values())
+            keys_list = (list)(select_dict.keys())
+        return keys_list,select_list
+
+    def convert_results_to_orm(self, results, keys_list, output_model:BaseModel):
+        results_orm = []
+        for result in results:
+            result_dict = {keys_list[index]:value for index,value in enumerate(result) if not value is None}
+            results_orm.append(output_model(**result_dict))
+        return results_orm
 
     def select(self, model_type: Base,output_model:BaseModel =None, **kargs):
         select_list = [model_type]
@@ -136,6 +150,38 @@ class DBService:
             # session.flush()
             session.commit()
         return result
+
+    def select_anti_join(self, model_type: Base, anti_join_statement, output_model: BaseModel=None, **kargs):
+        select_list = [model_type]
+        if not output_model is None:   
+            select_dict = {field:model_type.__dict__[field] for field in output_model.model_fields if field in model_type.__dict__}
+            select_list = (list)(select_dict.values())
+            keys_list = (list)(select_dict.keys())
+
+        search_keys = (list)(kargs.keys())
+        search_values = (list)(kargs.values())
+
+        search_conditions=[]
+        for index, key in enumerate(search_keys):
+            search_column = model_type.__dict__[key]
+            search_value = (list)(search_values[index])
+            search_conditions.append(search_column.in_(search_value))
+
+        anti_join_query = sqlalchemy.exists().where(anti_join_statement).where()
+        sql_query = sqlalchemy.select(*select_list).filter(~anti_join_query).where(sqlalchemy.and_(*search_conditions))
+    
+        with Session(self.db_sql_engine) as session:
+            results = session.execute(sql_query).fetchall()
+            if output_model is None:
+                results_orm = [item[0] for item in results]
+                return results_orm
+            
+            results_orm = []
+            for result in results:
+                result_dict = {keys_list[index]:value for index,value in enumerate(result) if not value is None}
+                results_orm.append(output_model(**result_dict))
+        
+        return results_orm
 
     # def close(self):
     #     if not self.db_sql_engine:
