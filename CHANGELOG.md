@@ -1,3 +1,9 @@
+## 0.5.1 (2023-12-25)
+
+### Fix
+
+- **db/sql_models.py**: Pull the environment suffix for the tables from os.environ
+
 ## 0.5.0 (2023-12-25)
 
 ### Feat
