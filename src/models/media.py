@@ -34,6 +34,7 @@ class MediaIDs(BaseModel):
     created_on: datetime
     media_name: str
     media_type: MediaTypeEnum
+    upload_status: MediaUploadStatus = MediaUploadStatus.PENDING
 
 class MediaMetadata(MediaIDs):
     media_size_bytes: int
@@ -44,7 +45,6 @@ class MediaMetadata(MediaIDs):
 
 class MediaDevice(MediaIDs):
     device_media_uri: str
-    upload_status: MediaUploadStatus = MediaUploadStatus.PENDING
     media_status_on_device: MediaDeviceStatus = MediaDeviceStatus.EXISTS
 
 class MediaThumbnail(MediaIDs):
