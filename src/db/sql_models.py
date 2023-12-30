@@ -84,6 +84,7 @@ class InsightOrm(Base):
     id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
     insight_engine_id: Mapped[str] = mapped_column(ForeignKey("insight_engine_"+ENVIRONMENT+".id"))
     media_id: Mapped[str] = mapped_column(ForeignKey("media_"+ENVIRONMENT+".media_id"))
+    job_id: Mapped[str] = mapped_column(ForeignKey("insight_jobs_"+ENVIRONMENT+".id"))
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[Optional[str]] = mapped_column(String(1000))
     bounding_box: Mapped[Optional[List[int]]] = mapped_column(PickleType())
@@ -105,3 +106,4 @@ class InsightJobOrm(Base):
 
     media: Mapped["MediaOrm"] = relationship(back_populates="insight_jobs")
     insight_engine: Mapped["InsightEngineOrm"] = relationship(back_populates="jobs")
+    insights: Mapped[List["InsightOrm"]] = relationship(back_populates="insight_engine")
