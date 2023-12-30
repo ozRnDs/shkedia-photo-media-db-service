@@ -1,7 +1,7 @@
 import sys
 import logging
 logger = logging.getLogger(__name__)
-from fastapi import APIRouter, HTTPException, status, Request, Depends
+from fastapi import APIRouter, HTTPException, status, Request, Depends, Query
 from typing import Union, List, Annotated
 import sqlalchemy
 from sqlalchemy.orm import Session
@@ -78,12 +78,16 @@ class JobsServiceHandler:
 
     def get_list_of_media_with_no_jobs_for_engine(self, engine_name: str,
                                     page_size: int | None = None,
-                                    page_number: int=0):
+                                    page_number: int=0,
+                                    uploaded_status: list[MediaUploadStatus] = Query(default=[])):
         try:
             output_model = MediaStorage
             keys_list, select_list = self.db_service.get_columns_from_models(MediaOrm,output_model)
             medias_with_jobs_query = sqlalchemy.select(InsightJobOrm.media_id).join(InsightEngineOrm,InsightJobOrm.insight_engine_id==InsightEngineOrm.id).where(InsightEngineOrm.name==engine_name)
-            medias_without_jobs_query = sqlalchemy.select(*select_list).where(~MediaOrm.media_id.in_(medias_with_jobs_query)).where(MediaOrm.upload_status==MediaUploadStatus.UPLOADED.value)
+            medias_without_jobs_query = sqlalchemy.select(*select_list).where(~MediaOrm.media_id.in_(medias_with_jobs_query))
+            if uploaded_status and len(uploaded_status)>0:
+                uploaded_status = [item.value for item in uploaded_status]
+                medias_without_jobs_query = medias_without_jobs_query.where(MediaOrm.upload_status.in_(uploaded_status))
             with Session(self.db_service.db_sql_engine) as session:
                 media_list = session.execute(medias_without_jobs_query).fetchall()
                 output_media_list = self.db_service.convert_results_to_orm(media_list,keys_list,output_model)
