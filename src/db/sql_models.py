@@ -92,6 +92,7 @@ class InsightOrm(Base):
 
     media: Mapped["MediaOrm"] = relationship(back_populates="insights")
     insight_engine: Mapped["InsightEngineOrm"] = relationship(back_populates="insights")
+    job: Mapped["InsightJobOrm"] = relationship(back_populates="insights")
 
 class InsightJobOrm(Base):
     __tablename__ = "insight_jobs_"+ENVIRONMENT
@@ -106,4 +107,4 @@ class InsightJobOrm(Base):
 
     media: Mapped["MediaOrm"] = relationship(back_populates="insight_jobs")
     insight_engine: Mapped["InsightEngineOrm"] = relationship(back_populates="jobs")
-    insights: Mapped[List["InsightOrm"]] = relationship(back_populates="insight_engine")
+    insights: Mapped[List["InsightOrm"]] = relationship(back_populates="job")
