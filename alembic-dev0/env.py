@@ -17,16 +17,19 @@ if config.config_file_name is not None:
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
+# ... etc.
 import sys, os
 sys.path.append(f"{os.getcwd()}/src")
 db_uri = os.environ.get("SQL_URI")
+os.environ["ENVIRONMENT"]="dev0"
 config.set_main_option('sqlalchemy.url', db_uri)
-# ... etc.
 
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+import sys, os
+sys.path.append(f"{os.getcwd()}/src")
 from db.sql_models import Base
 target_metadata = Base.metadata
 
@@ -35,6 +38,7 @@ def include_name(name, type_, parent_names):
         return name in target_metadata.tables
     else:
         return True
+
 
 
 def run_migrations_offline() -> None:

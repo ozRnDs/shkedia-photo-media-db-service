@@ -82,8 +82,34 @@ UPDATE /v1/rotate_key
     docker compose --env-file ${MEDIA_DB_ENV} up -d
     ```
 
+
 # Development
 ## Environment
+The best way to develop the component is using vs-code devcontainer method.
+Just run "Reopen in container"
+
+## DB migration
+The component uses SqlAlchemy and alembic to design and create the db tables.
+
+### DB Migration
+We have db for every environment for better integration and to separate development with on going production.  
+AWS offers only a single DB on it's freetier instance, hence, the db environment is set by suffix in the tables names. Each environment has it's own "alembic" migration folder and special care should be taken when applying the db migrations.
+1. Creating the migration version file:
+```bash
+export VERSION_MESSAGE="Description of the change in the version"
+alembic --config alembic-dev0.ini revision --autogenerate -m $VERSION_MESSAGE
+```
+2. Go through the file to make sure everything is fine.
+3. Apply the changes:
+```bash
+alembic --config alembic-dev0.ini upgrade head
+```
+head can be switch with a specific version that should be applied.
+4. Downgrading:
+```bash
+alembic --config alembic-dev0.ini downgrade base
+```
+base can be switched with a specific version that should be reversed.
 
 ## Build
 1. Set the parameters for the build
