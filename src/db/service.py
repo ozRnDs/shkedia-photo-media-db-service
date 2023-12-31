@@ -135,7 +135,20 @@ class DBService:
     #     sql_template, values = model_object.__sql_delete_item__(self.environment)
     #     self.__execute_sql__(sql_template=sql_template, values=values, commit=True)
 
-    def update(self, new_model_object: BaseModel, object_to_update, select_by_field):
+    def update(self, new_model_object: BaseModel, object_to_update, select_by_field: str):
+        """Updates single pydantic object in the sql model based on the ORM model and search field.
+
+        Args:
+            new_model_object (BaseModel): Pydantic model with the updated data
+            object_to_update (Base): The ORM model class based on sqlalchemy
+            select_by_field (str): The name of the field to set the update from
+
+        Raises:
+            FileNotFoundError: If could not find any object to update
+
+        Returns:
+            _type_: The result object after it was updated
+        """        
         search_in_field = object_to_update.__dict__[select_by_field]
         value_of_field = new_model_object.model_dump()[select_by_field]
         update_query = sqlalchemy.select(object_to_update).where(search_in_field==value_of_field)
@@ -149,7 +162,8 @@ class DBService:
                     setattr(result,field,value)
             # session.flush()
             session.commit()
-        return result
+        return result              
+
 
     def select_anti_join(self, model_type: Base, anti_join_statement, output_model: BaseModel=None, **kargs):
         select_list = [model_type]
