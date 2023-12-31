@@ -27,7 +27,7 @@ app = FastAPI(description="Rest API Interface for the media db service")
 # Initialize all app services
 try:
     db_service = DBService(credential_file_location=app_config.AUTH_DB_CREDENTIALS_LOCATION, environment=app_config.ENVIRONMENT, debug=app_config.DEBUG)
-    db_service.create_tables(Base)
+    # db_service.create_tables(Base)
 
 except Exception as err:
     app_config.logger.error(f"Failed to initialize the db. {err}")
