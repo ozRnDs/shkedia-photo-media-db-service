@@ -24,7 +24,7 @@
                 "JWT_KEY_LOCATION": "/temp/jwt_token",
                 "TOKEN_TIME_PERIOD": "1",
                 "DEBUG": "1",
-                "ENVIRONMENT":"dev"
+                "ENVIRONMENT":"dev0"
             }
         }
     ]
