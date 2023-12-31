@@ -1,4 +1,5 @@
 import sys
+import traceback
 import logging
 logger = logging.getLogger(__name__)
 from fastapi import APIRouter, HTTPException, status, Request, Depends, Query
@@ -55,6 +56,10 @@ class JobsServiceHandler:
                              methods=["put"],
                              endpoint=self.put_list_of_jobs,
                              response_model=List[InsightJob])
+        router.add_api_route(path="/job",
+                             methods=["post"],
+                             endpoint=self.update_list_of_jobs,
+                             response_model=List[InsightJob])
         return router
     
     def get_list_of_jobs_for_engine(self, engine_name: str,
@@ -99,6 +104,7 @@ class JobsServiceHandler:
         except Exception as err:
             if type(err)==HTTPException:
                 raise err
+            traceback.print_exc()
             logger.error(str(err))
             if type(err)==AttributeError:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
@@ -137,7 +143,27 @@ class JobsServiceHandler:
             insights_orm_list = [InsightJobOrm(**job.model_dump()) for job in jobs_list]
             if self.db_service.insert(insights_orm_list):
                 return [InsightJob(**job.__dict__) for job in insights_orm_list]
-            raise HTTPException(status_code=500, detail="Couldn't insert insight engines")
+            raise HTTPException(status_code=500, detail="Couldn't insert job")
+        except Exception as err:
+            if type(err) == HTTPException:
+                raise err
+            logger.error(err)
+            raise HTTPException(status_code=500, detail="Can't create engines")
+        
+    def update_list_of_jobs(self, jobs_list: List[InsightJob]) -> List[InsightJob]:
+        try:
+            failed=[]
+            success = []
+            for job in jobs_list:
+                try:
+                    result = self.db_service.update(job, object_to_update=InsightJobOrm, select_by_field="id")
+                    success.append(InsightJob(**result.__dict__))
+                except Exception as err:
+                    failed.append(job.id)
+            if len(success)==len(jobs_list):
+                return success
+            logger.error(f"Failed to update jobs: {failed}")
+            raise HTTPException(status_code=500, detail=f"Couldn't update {len(failed)} jobs")
         except Exception as err:
             if type(err) == HTTPException:
                 raise err
