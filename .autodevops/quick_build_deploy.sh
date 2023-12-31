@@ -1,3 +1,5 @@
+#!/bin/bash
+
 cz bump -ch
 
 export MEDIA_DB_SERVICE_VERSION=$(cz version -p)
