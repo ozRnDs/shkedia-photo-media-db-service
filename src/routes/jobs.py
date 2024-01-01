@@ -40,16 +40,16 @@ class JobsServiceHandler:
                         #    dependencies=[Depends(self.auth_service.__get_user_from_token__)],
                            prefix=""
                            )
+        router.add_api_route(path="/jobs/search",
+                             endpoint=self.search_jobs,
+                             methods=["get"],
+                             response_model=search_utils.SearchResult)
         router.add_api_route(path="/jobs/{engine_name}",
                              endpoint=self.get_list_of_jobs_for_engine,
                              methods=["get"],
                              response_model=search_utils.SearchResult)
         router.add_api_route(path="/no-jobs/media/{engine_name}",
                              endpoint=self.get_list_of_media_with_no_jobs_for_engine,
-                             methods=["get"],
-                             response_model=search_utils.SearchResult)
-        router.add_api_route(path="/search",
-                             endpoint=self.search_jobs,
                              methods=["get"],
                              response_model=search_utils.SearchResult)
         router.add_api_route(path="/job",
@@ -66,8 +66,8 @@ class JobsServiceHandler:
                                     page_size: int | None = None,
                                     page_number: int=0):
         try:
-            engine_id = self.db_service.select(InsightEngineOrm,InsightEngineBasic, name=engine_name)
-            jobs_list = self.db_service.select(InsightJobOrm, InsightJob, insight_engine_id=engine_id)
+            engine_list: InsightEngineOrm = self.db_service.select(InsightEngineOrm,InsightEngineBasic, name=[engine_name])
+            jobs_list = self.db_service.select(InsightJobOrm, InsightJob, insight_engine_id=[engine.id for engine in engine_list])
             if jobs_list is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Jobs were not found")
             if not type(jobs_list) is list:
@@ -88,12 +88,16 @@ class JobsServiceHandler:
         try:
             output_model = MediaStorage
             keys_list, select_list = self.db_service.get_columns_from_models(MediaOrm,output_model)
+            get_engine_id_query = sqlalchemy.select(InsightEngineOrm.id).where(InsightEngineOrm.name==engine_name)
             medias_with_jobs_query = sqlalchemy.select(InsightJobOrm.media_id).join(InsightEngineOrm,InsightJobOrm.insight_engine_id==InsightEngineOrm.id).where(InsightEngineOrm.name==engine_name)
             medias_without_jobs_query = sqlalchemy.select(*select_list).where(~MediaOrm.media_id.in_(medias_with_jobs_query))
             if uploaded_status and len(uploaded_status)>0:
                 uploaded_status = [item.value for item in uploaded_status]
                 medias_without_jobs_query = medias_without_jobs_query.where(MediaOrm.upload_status.in_(uploaded_status))
             with Session(self.db_service.db_sql_engine) as session:
+                engine_id = session.execute(get_engine_id_query).fetchall()
+                if len(engine_id)==0:
+                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Engine was not found")
                 media_list = session.execute(medias_without_jobs_query).fetchall()
                 output_media_list = self.db_service.convert_results_to_orm(media_list,keys_list,output_model)
             if output_media_list is None:
@@ -111,7 +115,7 @@ class JobsServiceHandler:
             raise HTTPException(status_code=500,detail="Server Internal Error")
 
 
-    def search_jobs(self, request: Request, search_field: str = "name", 
+    def search_jobs(self, request: Request, search_field: str = "id", 
                      search_value: str = None,
                      page_size: int | None = None,
                      page_number: int=0) -> search_utils.SearchResult:
@@ -124,7 +128,7 @@ class JobsServiceHandler:
             if search_value and not search_field in search_dictionary:
                 search_dictionary[search_field]=[search_value]
             response_type = InsightJob
-            insights_list = self.db_service.select(InsightJob,response_type,**search_dictionary)
+            insights_list = self.db_service.select(InsightJobOrm,response_type,**search_dictionary)
             if insights_list is None:
                 raise HTTPException(status_code=404, detail="Jobs were not found")
             if not type(insights_list) is list:
@@ -134,6 +138,7 @@ class JobsServiceHandler:
             if type(err)==HTTPException:
                 raise err
             logger.error(str(err))
+            traceback.print_exc()
             if type(err)==AttributeError:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
             raise HTTPException(status_code=500,detail="Server Internal Error")
