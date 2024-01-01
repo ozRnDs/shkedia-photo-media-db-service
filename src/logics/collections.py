@@ -64,10 +64,10 @@ class CollectionLogicService:
                 results_dict[key].media_list.append(media_id)
             media_ids = [result.media_list[0] for _,result in results_dict.items()]
             thumbnails = self.__get_thumbnails_for_medias__(media_ids=media_ids,session=session)
-            for index, media in enumerate(thumbnails):
+            for media_id, thumbnail in enumerate(thumbnails):
                 for _,result in results_dict.items():
-                    if result.thumbnail is None and media.media_id in result.media_list:
-                        result.thumbnail = media.media_thumbnail
+                    if result.thumbnail is None and media_id in result.media_list:
+                        result.thumbnail = thumbnail
             return results_dict
 
     def __get_thumbnails_for_medias__(self,media_ids: List[str], session: Session = None) -> Dict[str,str]:
@@ -76,6 +76,10 @@ class CollectionLogicService:
             session = Session(self.db_service.db_sql_engine)
         get_thumbnail_query = sqlalchemy.select(MediaOrm.media_id,MediaOrm.media_thumbnail).where(MediaOrm.media_id.in_(media_ids))
         thumbnails = session.execute(get_thumbnail_query).fetchall()
+        response_dict = {}
+        for item in thumbnails:
+            media_id, thumbnail = item
+            response_dict[media_id] = thumbnail
         if not session_existed:
             session.close()
-        return thumbnails
+        return response_dict
