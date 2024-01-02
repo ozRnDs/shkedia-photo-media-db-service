@@ -1,3 +1,4 @@
+import traceback
 import sys
 import logging
 logger = logging.getLogger(__name__)
@@ -47,8 +48,8 @@ class CollectionServiceHandler:
         router.add_api_route(path="/{collection_name}/{page_number}",
                              endpoint=self.get_collection_by_name,
                              methods=["get"],
-                             response_model=Union[List[CollectionBasic],List[CollectionPreview]])
-        router.add_api_route(path="/search",
+                             response_model=search_utils.SearchResult)
+        router.add_api_route(path="",
                              endpoint=self.get_collection_by_engine,
                              methods=["get"],
                              response_model=search_utils.SearchResult)
@@ -66,30 +67,32 @@ class CollectionServiceHandler:
             logger.error(str(err))
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Sorry, Something is wrong. Try again later")
 
-    def get_collection_by_engine(self, engine_name: str = None, page_number: int = None, page_size: int=16) -> search_utils.SearchResult:
+    def get_collection_by_engine(self, engine_name: str = None, page_number: int = 0, page_size: int=16) -> search_utils.SearchResult:
         try:
             results_dict = self.collection_logics.get_collections_metadata_by_names([engine_name], field_name=CollectionSearchField.ENGINE_NAME)
             results=(list)(results_dict.values())
-            return 
+            return search_utils.page_result_formater(results,page_size,page_number)
         except Exception as err:
             if type(err)==HTTPException:
                 raise err
+            traceback.print_exc()
             logger.error(str(err))
             if type(err)==AttributeError:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
             raise HTTPException(status_code=500,detail="Server Internal Error")
 
 
-    def get_collection_by_name(self, collection_name: str = None, page_number: int = None, page_size: int = 16) -> List[CollectionPreview]: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
+    def get_collection_by_name(self, collection_name: str = None, page_number: int = None, page_size: int = 16) -> search_utils.SearchResult: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
+        #TODO: Change to result type to handle the medias paging
         try:
-            results_dict = self.collection_logics.get_collections_metadata_by_names([collection_name])
-            results=(list)(results_dict.values())
+            results = self.collection_logics.get_media_by_collection_name(collection_name, page_number=page_number, page_size=page_size)
             if len(results)==0:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The collection was not found")
-            return search_utils.page_result_formater(results,page_size,page_number)
+            return search_utils.SearchResult(total_results_number=len(results), results=results, page_number=page_number, page_size=page_size)
         except Exception as err:
             if type(err)==HTTPException:
                 raise err
+            traceback.print_exc()
             logger.error(str(err))
             if type(err)==AttributeError:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
