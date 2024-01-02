@@ -58,6 +58,10 @@ class InsightServiceHandler:
                              endpoint=self.get_all_engines,
                              methods=["get"],
                              response_model=List[InsightEngineBasic])
+        router.add_api_route(path="/engine/search",
+                             endpoint=self.search_engine,
+                             methods=["get"],
+                             response_model=search_utils.SearchResult)
         router.add_api_route(path="/engine/{engine_id}",
                              endpoint=self.get_engine,
                              methods=["get"],
@@ -135,6 +139,33 @@ class InsightServiceHandler:
             if type(err)==AttributeError:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Server Internal Error")
+
+    def search_engine(self, request: Request, search_field: str = "name", 
+                     search_value: str = None,
+                     page_size: int | None = None,
+                     page_number: int=0, response_type: InsightEngineObjectEnum=InsightEngineObjectEnum.InsightEngine)->search_utils.SearchResult:
+        try:
+            search_dictionary = {}
+            if request:
+                search_dictionary = search_utils.extract_search_params_from_request(request.query_params.multi_items(),black_list_values=["response_type","search_field", "search_value", "page_size", "page_number"])
+            if search_value and search_field in search_dictionary:
+                search_dictionary[search_field].append(search_value)
+            if search_value and not search_field in search_dictionary:
+                search_dictionary[search_field]=[search_value]
+            response_type = getattr(sys.modules["models.insights"], response_type.value)
+            insights_list = self.db_service.select(InsightEngineOrm,response_type,**search_dictionary)
+            if insights_list is None:
+                raise HTTPException(status_code=404, detail="Engine was not found")
+            if not type(insights_list) is list:
+                insights_list=[insights_list]
+            return search_utils.page_result_formater(results=insights_list, page_size=page_size,page_number=page_number)
+        except Exception as err:
+            if type(err)==HTTPException:
+                raise err
+            logger.error(str(err))
+            if type(err)==AttributeError:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
+            raise HTTPException(status_code=500,detail="Server Internal Error")
 
 
     def search_insight(self, request: Request, search_field: str = "name", 
