@@ -15,7 +15,7 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users_"+ENVIRONMENT
 
-    user_id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
+    user_id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()), unique=True)
     user_name: Mapped[str] = mapped_column(String(50), unique=True)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     password: Mapped[str] = mapped_column(String(250))
@@ -25,7 +25,7 @@ class User(Base):
 class DeviceOrm(Base):
     __tablename__ = "devices_"+ENVIRONMENT
 
-    device_id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
+    device_id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()), unique=True)
     device_name: Mapped[str] = mapped_column(String(50), unique=True)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     device_status: Mapped[str] = mapped_column(String(50), default="ACTIVE") # ENUM: ACTIVE, DEACTIVATED
@@ -36,7 +36,7 @@ class DeviceOrm(Base):
 class MediaOrm(Base):
     __tablename__ = "media_"+ENVIRONMENT
 
-    media_id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
+    media_id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()), unique=True)
     media_name: Mapped[str] = mapped_column(String(250))
     media_type: Mapped[str] = mapped_column(String(50))
     media_size_bytes: Mapped[int] = mapped_column(Integer)
@@ -67,7 +67,7 @@ class MediaOrm(Base):
 class InsightEngineOrm(Base):
     __tablename__ =  "insight_engine_"+ENVIRONMENT
 
-    id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()), unique=True)
     name: Mapped[str] = mapped_column(String(250))
     description: Mapped[Optional[str]] = mapped_column(Text())
     input_source: Mapped[str] = mapped_column(String(250))
@@ -81,7 +81,7 @@ class InsightEngineOrm(Base):
 class InsightOrm(Base):
     __tablename__ = "insights_"+ENVIRONMENT
 
-    id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()), unique=True)
     insight_engine_id: Mapped[str] = mapped_column(ForeignKey("insight_engine_"+ENVIRONMENT+".id"))
     media_id: Mapped[str] = mapped_column(ForeignKey("media_"+ENVIRONMENT+".media_id"))
     job_id: Mapped[str] = mapped_column(ForeignKey("insight_jobs_"+ENVIRONMENT+".id"))
@@ -97,7 +97,7 @@ class InsightOrm(Base):
 class InsightJobOrm(Base):
     __tablename__ = "insight_jobs_"+ENVIRONMENT
 
-    id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(String(50), primary_key=True, default=lambda: str(uuid4()), unique=True)
     insight_engine_id: Mapped[str] = mapped_column(ForeignKey("insight_engine_"+ENVIRONMENT+".id"))
     media_id: Mapped[str] = mapped_column(ForeignKey("media_"+ENVIRONMENT+".media_id"))
     status: Mapped[str] = mapped_column(String(50), default="PENDING") # ENUM: PENDING, FAILED, DONE, CANCELED
