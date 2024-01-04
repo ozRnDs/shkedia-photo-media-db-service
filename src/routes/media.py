@@ -1,3 +1,4 @@
+import traceback
 import sys
 import logging
 logger = logging.getLogger(__name__)
@@ -40,29 +41,33 @@ class MediaServiceHandler:
         router.add_api_route(path="", 
                              endpoint=self.put_media,
                              methods=["put"],
-                             response_model=List[MediaIDs])
+                             response_model=List[MediaIDs],
+                             dependencies=[Depends(self.auth_service.auth_request)])
         router.add_api_route(path="/search", 
                              endpoint=self.search_media,
                              methods=["get"],
-                             response_model=search_utils.SearchResult)
+                             response_model=search_utils.SearchResult,
+                             dependencies=[Depends(self.auth_service.auth_request)])
         router.add_api_route(path="/{media_id}", 
                              endpoint=self.get_media,
                              methods=["get"],
-                             response_model=Union[MediaIDs, MediaDevice, MediaMetadata, MediaThumbnail, MediaStorage])
+                             response_model=Union[MediaIDs, MediaDevice, MediaMetadata, MediaThumbnail, MediaStorage],
+                             dependencies=[Depends(self.auth_service.auth_request)])
         # router.add_api_route(path="/{media_id}", 
         #                      endpoint=self.delete_media,
         #                      methods=["delete"])
         router.add_api_route(path="/{media_id}", 
                              endpoint=self.update_media,
                              methods=["post"],
-                             response_model=MediaIDs)
+                             response_model=MediaIDs,
+                             dependencies=[Depends(self.auth_service.auth_request)])
         return router
 
 
-    def put_media(self, media_list: List[MediaRequest]) -> List[MediaIDs]:
+    def put_media(self, request: Request, media_list: List[MediaRequest]) -> List[MediaIDs]:
         try:
             devices_ids = list(set([media.device_id for media in media_list]))
-            devices = self.db_service.select(DeviceOrm,device_id=devices_ids)
+            devices = self.db_service.select(DeviceOrm,device_id=devices_ids, owner_id=[request.user_data.id])
             if len(devices)==0:
                 err_detail = f"No device was found for the requested media"
                 logger.error(err_detail)
@@ -78,10 +83,10 @@ class MediaServiceHandler:
             logger.error(err)
             raise HTTPException(status_code=500, detail="Can't create media")
 
-    def get_media(self, media_id: str = None, response_type: MediaObjectEnum = MediaObjectEnum.MediaIDs):
+    def get_media(self, request: Request,media_id: str = None, response_type: MediaObjectEnum = MediaObjectEnum.MediaIDs):
         try:
             response_type = getattr(sys.modules["project_shkedia_models.media"], response_type.value)
-            find_media = self.db_service.select(MediaOrm, response_type, **{"media_id": [media_id]})
+            find_media = self.db_service.select(MediaOrm, response_type, media_id=[media_id], owner_id=[request.user_data.id])
             if find_media is None or len(find_media)==0:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="media was not found")
             return find_media[0]
@@ -106,7 +111,7 @@ class MediaServiceHandler:
             if search_value and not search_field in search_dictionary:
                 search_dictionary[search_field]=[search_value]
             response_type = getattr(sys.modules["project_shkedia_models.media"], response_type.value)
-            get_media = self.db_service.select(MediaOrm,response_type,**search_dictionary)
+            get_media = self.db_service.select(MediaOrm,response_type,owner_id=[request.user_data.id],**search_dictionary)
             if get_media is None:
                 raise HTTPException(status_code=404, detail="media was not found")
             if not type(get_media) is list:
@@ -123,13 +128,16 @@ class MediaServiceHandler:
     def delete_media(self, media_id: str):
         raise HTTPException(status_code=status.HTTP_425_TOO_EARLY, detail="Not Implemented")
 
-    def update_media(self, new_media: MediaDB) -> MediaIDs:
+    def update_media(self, request: Request, new_media: Union[MediaMetadata,MediaThumbnail,MediaStorage,MediaDevice, MediaIDs]) -> MediaIDs:
         try:
-            updated_object = self.db_service.update(new_media, object_to_update=MediaOrm, select_by_field="media_id")
+            if request.user_data.id != new_media.owner_id:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Permission Denied")
+            updated_object = self.db_service.update(new_media, object_to_update=MediaOrm, user_id=request.user_data.id, select_by_field="media_id")
             return sql_model_to_pydantic_model(updated_object, MediaIDs)
         except Exception as err:
             if type(err)==HTTPException:
                 raise err
+            traceback.print_exc()
             logger.error(str(err))
             if type(err)==AttributeError:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))

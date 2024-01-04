@@ -66,7 +66,8 @@ class InsightServiceHandlerV3:
         router.add_api_route(path="/insights/search",
                              endpoint=self.search_insight,
                              methods=["get"],
-                             response_model=search_utils.SearchResult)
+                             response_model=search_utils.SearchResult,
+                             dependencies=[Depends(self.auth_service.auth_request)])
         return router
 
 
@@ -177,6 +178,7 @@ class InsightServiceHandlerV3:
                      page_size: int | None = None,
                      page_number: int=0, response_type: InsightObjectEnum = InsightObjectEnum.InsightBasic) -> search_utils.SearchResult:
         try:
+            #TODO: Think about a way to get only the owners information (Option1: Include owners_id in the sql table, Option2: Use join)
             search_dictionary = {}
             if request:
                 search_dictionary = search_utils.extract_search_params_from_request(request.query_params.multi_items(),black_list_values=["response_type","search_field", "search_value", "page_size", "page_number"])

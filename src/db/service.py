@@ -138,7 +138,7 @@ class DBService:
     #     sql_template, values = model_object.__sql_delete_item__(self.environment)
     #     self.__execute_sql__(sql_template=sql_template, values=values, commit=True)
 
-    def update(self, new_model_object: BaseModel, object_to_update, select_by_field: str):
+    def update(self, new_model_object: BaseModel, object_to_update, select_by_field: str, user_id: str=None):
         """Updates single pydantic object in the sql model based on the ORM model and search field.
 
         Args:
@@ -155,6 +155,9 @@ class DBService:
         search_in_field = object_to_update.__dict__[select_by_field]
         value_of_field = new_model_object.model_dump()[select_by_field]
         update_query = sqlalchemy.select(object_to_update).where(search_in_field==value_of_field)
+        if "owner_id" in object_to_update.__dict__:
+            owner_column = object_to_update.__dict__["owner_id"]
+            update_query = update_query.where(owner_column==user_id)
         with Session(self.db_sql_engine) as session:
             session.expire_on_commit = False
             result = session.scalars(update_query).first()
