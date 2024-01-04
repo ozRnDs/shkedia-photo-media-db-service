@@ -2,8 +2,8 @@ import logging
 logger = logging.getLogger(__name__)
 import json
 import sqlalchemy
-from typing import List
-from sqlalchemy.orm import Session
+from typing import List, Any
+from sqlalchemy.orm import Session, attributes
 from pydantic import BaseModel
 
 from db.sql_models import Base, DeclarativeBase
@@ -99,7 +99,7 @@ class DBService:
             results_orm.append(output_model(**result_dict))
         return results_orm
 
-    def select(self, model_type: Base,output_model:BaseModel =None, **kargs):
+    def select(self, model_type: Base,output_model:BaseModel=None,distinct: bool = False,order_by: attributes.InstrumentedAttribute | None = None, **kargs):
         select_list = [model_type]
         if not output_model is None:   
             select_dict = {field:model_type.__dict__[field] for field in output_model.model_fields if field in model_type.__dict__}
@@ -116,7 +116,10 @@ class DBService:
             search_conditions.append(search_column.in_(search_value))
 
         sql_query = sqlalchemy.select(*select_list).where(sqlalchemy.and_(*search_conditions))
-    
+        if distinct:
+            sql_query=sql_query.distinct()
+        if order_by:
+            sql_query=sql_query.order_by(order_by)
         with Session(self.db_sql_engine) as session:
             results = session.execute(sql_query).fetchall()
             if output_model is None:

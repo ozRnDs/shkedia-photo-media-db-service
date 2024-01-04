@@ -32,22 +32,23 @@ class CollectionServiceHandler:
 
 
     def __initialize_routes__(self):
-        router = APIRouter(tags=["collection"],
+        router = APIRouter(tags=["collections"],
                         #    dependencies=[Depends(self.auth_service.__get_user_from_token__)],
                            prefix=""
                            )
-        router.add_api_route(path="/all",
+        router.add_api_route(path="/collections",
                              endpoint=self.get_collections_list,
                              methods=["get"],
                              response_model=List[CollectionBasic])
-        router.add_api_route(path="/{collection_name}/{page_number}",
-                             endpoint=self.get_collection_by_name,
-                             methods=["get"],
-                             response_model=search_utils.SearchResult)
-        router.add_api_route(path="",
+        router.add_api_route(path="/insights-engines/{engine_name}/collections",
                              endpoint=self.get_collection_by_engine,
                              methods=["get"],
                              response_model=search_utils.SearchResult)
+        router.add_api_route(path="/collections/{collection_name}",
+                             endpoint=self.get_collection_by_name,
+                             methods=["get"],
+                             response_model=search_utils.SearchResult)
+
         return router
     
     def get_collections_list(self, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic) -> List[CollectionBasic]:

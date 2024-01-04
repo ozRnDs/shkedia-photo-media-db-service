@@ -10,6 +10,7 @@ from db.service import DBService
 
 from routes.media import MediaServiceHandler
 from routes.insights import InsightServiceHandler
+from routes.insights_v3 import InsightServiceHandlerV3
 from routes.collections import CollectionServiceHandler
 from routes.jobs import JobsServiceHandler
 from db.sql_models import Base
@@ -37,6 +38,7 @@ try:
                                default_expire_delta_min=app_config.TOKEN_TIME_PERIOD)
     media_service = MediaServiceHandler(db_service=db_service, app_logging_service=None, auth_service=auth_service)
     insight_service = InsightServiceHandler(db_service=db_service, app_logging_service=None, auth_service=auth_service)
+    insight_service_v3 = InsightServiceHandlerV3(db_service=db_service, app_logging_service=None, auth_service=auth_service)
     collection_logics = CollectionLogicService(db_service=db_service, app_logging_service=None, auth_service=auth_service)
     collection_service = CollectionServiceHandler(db_service=db_service, app_logging_service=None, auth_service=auth_service, collection_logics=collection_logics)
     jobs_service = JobsServiceHandler(db_service=db_service,app_logging_service=None, auth_service=auth_service)
@@ -51,5 +53,6 @@ except Exception as err:
 
 app.include_router(media_service.router, prefix="/v1/media")
 app.include_router(insight_service.router, prefix="/v2/insights")
-app.include_router(collection_service.router, prefix="/v2/collection")
+app.include_router(insight_service_v3.router, prefix="/v3")
+app.include_router(collection_service.router, prefix="/v2")
 app.include_router(jobs_service.router,prefix="/v2")
