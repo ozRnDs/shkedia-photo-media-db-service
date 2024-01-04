@@ -2,6 +2,7 @@ import os
 from sqlalchemy import String, ForeignKey, Text, DateTime, Enum, Integer, SmallInteger, PickleType
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, validates
 from sqlalchemy.sql import func
+func: callable
 from typing import Optional, List
 from uuid import uuid4
 

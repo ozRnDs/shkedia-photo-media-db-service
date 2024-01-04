@@ -121,18 +121,7 @@ class MediaServiceHandler:
             raise HTTPException(status_code=500,detail="Server Internal Error")
 
     def delete_media(self, media_id: str):
-        # TODO: Refactor and adjust to sqlalchemy
-        try:
-            media = self.db_service.select(media, media_id=media_id)
-            if media is None:
-                raise HTTPException(status_code=404, detail="Can't delete media")
-            self.db_service.delete(media)
-            return True
-        except Exception as err:
-            if type(err)==HTTPException:
-                raise err
-            logger.error(err)
-            raise HTTPException(status_code=500, detail="Can't delete media")
+        raise HTTPException(status_code=status.HTTP_425_TOO_EARLY, detail="Not Implemented")
 
     def update_media(self, new_media: MediaDB) -> MediaIDs:
         try:

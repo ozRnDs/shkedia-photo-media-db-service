@@ -8,10 +8,6 @@ import sqlalchemy
 from sqlalchemy.orm import Session
 from enum import Enum
 
-# from models.user import UserDB, User
-# from models.device import Device
-
-
 from db.sql_models import InsightEngineOrm, InsightOrm, MediaOrm
 from project_shkedia_models.collection import CollectionBasic, CollectionObjectEnum, CollectionPreview
 from db.service import DBService

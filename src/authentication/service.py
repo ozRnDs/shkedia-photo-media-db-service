@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 
 from db.service import DBService
 from db.sql_models import User
-# from models.user import UserDB
 
 class Token(BaseModel):
     access_token: str
@@ -84,18 +83,18 @@ class AuthService:
             headers={"WWW-Authenticate": "Bearer"},
         )
         return
-        try:
-            payload = jwt.decode(token, self.__get_jwt_key__(), algorithms=[self.jwt_algorithm])
-            username: str = payload.get("sub")
-            if username is None:
-                raise credentials_exception
-            token_data = TokenData(username=username)
-        except JWTError:
-            raise credentials_exception
-        user = self.db_service.select(UserDB, user_name=username)
-        if user is None:
-            raise credentials_exception
-        return user
+        # try:
+        #     payload = jwt.decode(token, self.__get_jwt_key__(), algorithms=[self.jwt_algorithm])
+        #     username: str = payload.get("sub")
+        #     if username is None:
+        #         raise credentials_exception
+        #     token_data = TokenData(username=username)
+        # except JWTError:
+        #     raise credentials_exception
+        # user = self.db_service.select(UserDB, user_name=username)
+        # if user is None:
+        #     raise credentials_exception
+        # return user
     
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
