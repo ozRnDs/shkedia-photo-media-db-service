@@ -32,27 +32,24 @@ class CollectionLogicService:
         if not self.db_service.is_ready():
             raise Exception("Can't initializes without db_service")
         
-    def get_collections_metadata_by_names(self,collections_names: List[str],
-                                          field_name: CollectionSearchField = CollectionSearchField.COLLECTION_NAME,
+    def get_collections_metadata_by_names(self,collection_names: List[str], engine_names: List[str],
                                           user_id: str | None = None,
                                           ) -> Dict[str,CollectionPreview]:
         
         insight_table = sqlalchemy.alias(InsightOrm)
         engine_table = sqlalchemy.alias(InsightEngineOrm)
         media_table = sqlalchemy.alias(MediaOrm)
-        
-        match field_name:
-            case CollectionSearchField.ENGINE_NAME:
-                search_field = engine_table.c.name
-            case CollectionSearchField.COLLECTION_NAME:
-                search_field = insight_table.c.name
-        
+                
         collections_sql_query = sqlalchemy.select(insight_table.c.name, 
                                         engine_table.c.name, 
                                         media_table.c.media_id)
         collections_sql_query = collections_sql_query.join(engine_table, insight_table.c.insight_engine_id == engine_table.c.id)
         collections_sql_query=collections_sql_query.join(media_table,media_table.c.media_id==insight_table.c.media_id)
-        collections_sql_query=collections_sql_query.where(search_field.in_(collections_names)).where(media_table.c.owner_id==user_id).order_by(insight_table.c.name)
+        collections_sql_query=collections_sql_query.where(media_table.c.owner_id==user_id).order_by(insight_table.c.name)
+        if len(collection_names)>0:
+            collections_sql_query=collections_sql_query.where(insight_table.c.name.in_(collection_names))
+        if len(engine_names)>0:
+            collections_sql_query=collections_sql_query.where(engine_table.c.name.in_(engine_names))
         results_dict = {}
         with Session(self.db_service.db_sql_engine) as session:
             results = session.execute(collections_sql_query).fetchall()
