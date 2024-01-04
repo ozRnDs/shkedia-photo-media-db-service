@@ -8,12 +8,12 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 import sqlalchemy
-
+os.environ["ENVIRONMENT"]="test"
 sys.path.append(f"{os.getcwd()}/src")
 print(sys.path)
 
 from main import app, app_config # TODO: Figure out better way to test the app
-from models.media import MediaRequest
+from project_shkedia_models.media import MediaRequest
 from db.sql_models import Base, User, DeviceOrm, MediaOrm, InsightEngineOrm, InsightOrm
 from db.service import DBService
 
@@ -76,11 +76,13 @@ def mock_db_service():
         if i%2==0:
             list_of_items_to_insert.append(InsightOrm(insight_engine_id=f"test_engine_{i%4}",
                                                       media_id=f"media_no_{i}",
-                                                      name="devide_2"))
+                                                      name="collection2",
+                                                      job_id="test_job1"))
         if i%3==0:
             list_of_items_to_insert.append(InsightOrm(insight_engine_id=f"test_engine_{i%4}",
                                                       media_id=f"media_no_{i}",
-                                                      name="something_3"))
+                                                      name="something_3",
+                                                      job_id="test_job2"))
     mock_db_service.insert(list_of_items_to_insert)
 
     yield mock_db_service
@@ -95,7 +97,7 @@ def client_fixture(jwt_key_location_fixture):
     app_config.JWT_KEY_LOCATION=jwt_key_location_fixture
     app_config.TOKEN_TIME_PERIOD=1
     client = TestClient(app)
-
+    
     yield client
 
     client.close()

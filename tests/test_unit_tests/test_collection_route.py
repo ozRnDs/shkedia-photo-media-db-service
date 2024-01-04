@@ -32,8 +32,8 @@ def test_get_collection_nominal(collection_handler_fixture):
     # SETUP
     
     # RUN
-    results = collection_handler_fixture.get_collection(collection_name="devide_2")
+    results = collection_handler_fixture.get_collection_by_name(collection_name="collection2")
     # ASSERT
-    assert len(results) == 2
-    for result in results:
+    assert len(results.results) == 10
+    for result in results.results:
         assert type(result) == CollectionPreview

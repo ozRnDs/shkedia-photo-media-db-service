@@ -17,7 +17,7 @@ def collection_logic_fixture(mock_db_service) -> CollectionLogicService:
 
 def test_get_collections_metadata_by_names_nominal(collection_logic_fixture):
     # SETUP
-    search_in_list = ["devide_2","something_3"]
+    search_in_list = ["collection2","something_3"]
     # RUN
     results = collection_logic_fixture.get_collections_metadata_by_names(collections_names=search_in_list)
     # ASSERT

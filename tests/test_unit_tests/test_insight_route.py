@@ -38,14 +38,17 @@ def test_put_insight_nominal(insight_handler_fixture):
     # SETUP
     new_insights = [Insight(insight_engine_id="month_test", 
                                media_id="id_for_test",
-                               name="2023.08"),
+                               name="2023.08",
+                               job_id="test_init_job_1"),
                     Insight(insight_engine_id="month_test", 
                                media_id="Doesn't Exists2",
-                               name="2023.09")]
+                               name="2023.09",
+                               job_id="test_init_job_2")]
     for i in range(10):
         new_insights.append(Insight(insight_engine_id="month_test", 
                                media_id=f"id_for_test_{i}",
-                               name="2023.08"))
+                               name="2023.08",
+                               job_id=f"test_job_{i}"))
     # RUN
     inserted_insights = insight_handler_fixture.put_insight(new_insights)
     # ASSERT
@@ -80,6 +83,9 @@ def test_get_all_engines_nominal(insight_handler_fixture):
     assert len(engine_data) > 0
 
 def test_search_insight_by_name_nominal(insight_handler_fixture):
+    """This test depends on all the tests in this test inorder to pass
+
+    """    
     # SETUP
     search_condition_list = []
 

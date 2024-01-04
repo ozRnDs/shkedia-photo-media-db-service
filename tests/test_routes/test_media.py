@@ -1,22 +1,22 @@
 import pytest
 from fastapi.testclient import TestClient
 from datetime import datetime
-from models.media import MediaRequest, MediaDB, MediaDeviceStatus, MediaUploadStatus
+from project_shkedia_models.media import MediaRequest, MediaDB, MediaDeviceStatus, MediaUploadStatus
 from routes.search_utils import SearchResult
 
 def test_put_media_device_doent_exists(client_fixture: TestClient):
     # SETUP
-    test_media = MediaRequest(media_name="Test_Media",
+    test_media = [MediaRequest(media_name="Test_Media",
                               media_size_bytes=1024,
                               media_thumbnail="NoImage",
                               media_type="IMAGE",
-                              created_on=datetime.now().isoformat(),
+                              created_on=datetime.now(),
                               device_id="NotExist",
-                              device_media_uri="uri://something")
+                              device_media_uri="uri://something").model_dump()]
 
 
     # Test
-    response = client_fixture.put("/v1/media", content=test_media.model_dump_json())
+    response = client_fixture.put("/v1/media", json=test_media)
 
     # ASSERT
     assert response.status_code == 400
