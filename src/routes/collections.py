@@ -45,8 +45,13 @@ class CollectionServiceHandler:
                              methods=["get"],
                              response_model=search_utils.SearchResult,
                              dependencies=[Depends(self.auth_service.auth_request)])
-        router.add_api_route(path="/collections/{collection_name}",
+        router.add_api_route(path="/insights-engines/{engine_name}/collections/{collection_name}",
                              endpoint=self.get_collection_by_name,
+                             methods=["get"],
+                             response_model=search_utils.SearchResult,
+                             dependencies=[Depends(self.auth_service.auth_request)])
+        router.add_api_route(path="/insights-engines/{engine_name}/collections/{collection_name}/media",
+                             endpoint=self.get_collection_media,
                              methods=["get"],
                              response_model=search_utils.SearchResult,
                              dependencies=[Depends(self.auth_service.auth_request)])
@@ -67,7 +72,7 @@ class CollectionServiceHandler:
 
     def get_collection_by_engine(self, request: Request, engine_name: str = None, page_number: int = 0, page_size: int=16) -> search_utils.SearchResult:
         try:
-            results_dict = self.collection_logics.get_collections_metadata_by_names([engine_name], field_name=CollectionSearchField.ENGINE_NAME, user_id=request.user_data.id)
+            results_dict = self.collection_logics.get_collections_metadata_by_names(engine_names=[engine_name], collection_names=[], user_id=request.user_data.id)
             results=(list)(results_dict.values())
             return search_utils.page_result_formater(results,page_size,page_number)
         except Exception as err:
@@ -79,8 +84,21 @@ class CollectionServiceHandler:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
             raise HTTPException(status_code=500,detail="Server Internal Error")
 
+    def get_collection_by_name(self, request: Request, collection_name: str = None,engine_name: str = None) -> search_utils.SearchResult:
+        try:
+            results_dict = self.collection_logics.get_collections_metadata_by_names(collection_names=[collection_name], engine_names=[engine_name], user_id=request.user_data.id)
+            results=(list)(results_dict.values())
+            return search_utils.page_result_formater(results,5,0)
+        except Exception as err:
+            if type(err)==HTTPException:
+                raise err
+            traceback.print_exc()
+            logger.error(str(err))
+            if type(err)==AttributeError:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
+            raise HTTPException(status_code=500,detail="Server Internal Error")
 
-    def get_collection_by_name(self, request: Request, collection_name: str = None, page_number: int = 0, page_size: int = 16) -> search_utils.SearchResult: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
+    def get_collection_media(self, request: Request, collection_name: str = None, page_number: int = 0, page_size: int = 16) -> search_utils.SearchResult: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
         try:
             results = self.collection_logics.get_media_by_collection_name(collection_name, user_id=request.user_data.id,page_number=page_number, page_size=page_size)
             if len(results)==0:
