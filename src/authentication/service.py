@@ -76,7 +76,10 @@ class AuthService:
         return temp_token
 
     def auth_request(self, request: Request, token: Annotated[str,Depends(oauth2_scheme)]):
-        request.user_data = self.__get_data_from_token__(token)
+        try:
+            request.user_data = self.__get_data_from_token__(token)
+        except PermissionError as err:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail=str(err))
 
     def __get_data_from_token__(self, token: str) -> TokenData:
         credentials_exception = PermissionError("Invalid Session Token")
