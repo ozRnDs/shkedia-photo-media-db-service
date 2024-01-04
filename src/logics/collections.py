@@ -68,12 +68,11 @@ class CollectionLogicService:
             for media_id, thumbnail in thumbnails.items():
                 for _,result in results_dict.items():
                     if result.thumbnail is None and media_id in result.media_list:
-                        result.thumbnail = thumbnail
+                        result.thumbnail, result.media_key = thumbnail
             return results_dict
         
     def get_media_by_collection_name(self,collection_name: str,
-                                     page_number: int = 0, page_size: int = 16
-                                          ) -> Dict[str,CollectionPreview]:
+                                     page_number: int = 0, page_size: int = 16) -> Dict[str,CollectionPreview]:
         insight_table = sqlalchemy.alias(InsightOrm)
         # media_table = sqlalchemy.alias(MediaOrm)
 
@@ -93,12 +92,12 @@ class CollectionLogicService:
         session_existed = True if session else False
         if not session:
             session = Session(self.db_service.db_sql_engine)
-        get_thumbnail_query = sqlalchemy.select(MediaOrm.media_id,MediaOrm.media_thumbnail).where(MediaOrm.media_id.in_(media_ids))
+        get_thumbnail_query = sqlalchemy.select(MediaOrm.media_id,MediaOrm.media_thumbnail, MediaOrm.media_key).where(MediaOrm.media_id.in_(media_ids))
         thumbnails = session.execute(get_thumbnail_query).fetchall()
         response_dict = {}
         for item in thumbnails:
-            media_id, thumbnail = item
-            response_dict[media_id] = thumbnail
+            media_id, thumbnail,media_key = item
+            response_dict[media_id] = (thumbnail,media_key)
         if not session_existed:
             session.close()
         return response_dict
