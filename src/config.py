@@ -11,7 +11,8 @@ class ApplicationConfiguration:
 
     # Authentication Configuration values
     JWT_KEY_LOCATION: str = "/temp/jwt_token"
-    AUTH_SERVICE_URL: str = "CHANGE ME"
+    USER_DB_HOST: str = "10.0.0.5"
+    USER_DB_PORT: str = "4430"
     TOKEN_TIME_PERIOD: int = 15
 
     # DB Configuration values
