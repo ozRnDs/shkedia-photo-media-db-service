@@ -23,8 +23,6 @@ from logics.collections import CollectionLogicService
     
 app = FastAPI(description="Rest API Interface for the media db service")
 
-#TODO: Bind auth service as middleware to all requests
-
 # Initialize all app services
 try:
     db_service = DBService(credential_file_location=app_config.AUTH_DB_CREDENTIALS_LOCATION, environment=app_config.ENVIRONMENT, debug=app_config.DEBUG)
