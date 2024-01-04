@@ -76,6 +76,15 @@ class UserDBService:
             raise PermissionError("Permission Denied")
         raise Exception(login_response.json()["detail"])
 
+    def get_current_user(self, token: Token) -> User:
+        get_current_user_url = self.service_url+"/user/current"
+        
+        user_response = requests.get(get_current_user_url, headers=token.get_token_as_header())
+
+        if user_response.status_code == 200:
+            return User(**user_response.json())
+        raise Exception(user_response.json()["detail"])
+
     def search_user(self, token: Token, search_value: str, search_field: str="user_name") -> User:
         
         search_user_url = self.service_url+"/user"
