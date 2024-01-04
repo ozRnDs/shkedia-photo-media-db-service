@@ -78,8 +78,17 @@ class AuthService:
     def auth_request(self, request: Request, token: Annotated[str,Depends(oauth2_scheme)]):
         try:
             request.user_data = self.__get_data_from_token__(token)
-        except PermissionError as err:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail=str(err))
+            return
+        except Exception as err:
+            logger.warning(str(err))
+        try:
+            token = Token.from_token_header(request.headers.get("authorization"))
+            user_data = self.user_db_service.get_current_user(token)
+            request.user_data = TokenData(name=user_data.user_name,id=user_data.user_id) 
+            return
+        except Exception as err:
+            logger.warning(str(err))
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Not Authorized")
 
     def __get_data_from_token__(self, token: str) -> TokenData:
         credentials_exception = PermissionError("Invalid Session Token")
