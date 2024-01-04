@@ -34,6 +34,7 @@ class CollectionLogicService:
         
     def get_collections_metadata_by_names(self,collections_names: List[str],
                                           field_name: CollectionSearchField = CollectionSearchField.COLLECTION_NAME,
+                                          user_id: str | None = None,
                                           ) -> Dict[str,CollectionPreview]:
         
         insight_table = sqlalchemy.alias(InsightOrm)
@@ -46,15 +47,15 @@ class CollectionLogicService:
             case CollectionSearchField.COLLECTION_NAME:
                 search_field = insight_table.c.name
         
-        sql_query = sqlalchemy.select(insight_table.c.name, 
+        collections_sql_query = sqlalchemy.select(insight_table.c.name, 
                                         engine_table.c.name, 
                                         media_table.c.media_id)
-        sql_query = sql_query.join(engine_table, insight_table.c.insight_engine_id == engine_table.c.id)
-        sql_query=sql_query.join(media_table,media_table.c.media_id==insight_table.c.media_id)
-        sql_query=sql_query.where(search_field.in_(collections_names)).order_by(insight_table.c.name)
+        collections_sql_query = collections_sql_query.join(engine_table, insight_table.c.insight_engine_id == engine_table.c.id)
+        collections_sql_query=collections_sql_query.join(media_table,media_table.c.media_id==insight_table.c.media_id)
+        collections_sql_query=collections_sql_query.where(search_field.in_(collections_names)).where(media_table.c.owner_id==user_id).order_by(insight_table.c.name)
         results_dict = {}
         with Session(self.db_service.db_sql_engine) as session:
-            results = session.execute(sql_query).fetchall()
+            results = session.execute(collections_sql_query).fetchall()
             for result in results:
                 temp_collection_name = result[0]
                 engine_name = result[1]
@@ -71,16 +72,15 @@ class CollectionLogicService:
                         result.thumbnail, result.media_key = thumbnail
             return results_dict
         
-    def get_media_by_collection_name(self,collection_name: str,
+    def get_media_by_collection_name(self,collection_name: str, user_id: str,
                                      page_number: int = 0, page_size: int = 16) -> Dict[str,CollectionPreview]:
         insight_table = sqlalchemy.alias(InsightOrm)
         # media_table = sqlalchemy.alias(MediaOrm)
 
         keys_list, select_list = self.db_service.get_columns_from_models(MediaOrm, MediaThumbnail)
-        #TODO: Get media details for preview
         sql_query = sqlalchemy.select(*select_list)
         sql_query=sql_query.join(insight_table,MediaOrm.media_id==insight_table.c.media_id)
-        sql_query=sql_query.where(insight_table.c.name==collection_name).order_by(MediaOrm.created_on).offset(page_number*page_size).limit(page_size)
+        sql_query=sql_query.where(insight_table.c.name==collection_name).where(MediaOrm.owner_id==user_id).order_by(MediaOrm.created_on).offset(page_number*page_size).limit(page_size)
         with Session(self.db_service.db_sql_engine) as session:
             results = session.execute(sql_query).fetchall()
             results = self.db_service.convert_results_to_orm(results,keys_list,MediaThumbnail)

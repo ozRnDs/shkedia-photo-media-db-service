@@ -43,11 +43,13 @@ class CollectionServiceHandler:
         router.add_api_route(path="/insights-engines/{engine_name}/collections",
                              endpoint=self.get_collection_by_engine,
                              methods=["get"],
-                             response_model=search_utils.SearchResult)
+                             response_model=search_utils.SearchResult,
+                             dependencies=[Depends(self.auth_service.auth_request)])
         router.add_api_route(path="/collections/{collection_name}",
                              endpoint=self.get_collection_by_name,
                              methods=["get"],
-                             response_model=search_utils.SearchResult)
+                             response_model=search_utils.SearchResult,
+                             dependencies=[Depends(self.auth_service.auth_request)])
 
         return router
     
@@ -63,9 +65,9 @@ class CollectionServiceHandler:
             logger.error(str(err))
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Sorry, Something is wrong. Try again later")
 
-    def get_collection_by_engine(self, engine_name: str = None, page_number: int = 0, page_size: int=16) -> search_utils.SearchResult:
+    def get_collection_by_engine(self, request: Request, engine_name: str = None, page_number: int = 0, page_size: int=16) -> search_utils.SearchResult:
         try:
-            results_dict = self.collection_logics.get_collections_metadata_by_names([engine_name], field_name=CollectionSearchField.ENGINE_NAME)
+            results_dict = self.collection_logics.get_collections_metadata_by_names([engine_name], field_name=CollectionSearchField.ENGINE_NAME, user_id=request.user_data.id)
             results=(list)(results_dict.values())
             return search_utils.page_result_formater(results,page_size,page_number)
         except Exception as err:
@@ -78,10 +80,9 @@ class CollectionServiceHandler:
             raise HTTPException(status_code=500,detail="Server Internal Error")
 
 
-    def get_collection_by_name(self, collection_name: str = None, page_number: int = 0, page_size: int = 16) -> search_utils.SearchResult: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
-        #TODO: Change to result type to handle the medias paging
+    def get_collection_by_name(self, request: Request, collection_name: str = None, page_number: int = 0, page_size: int = 16) -> search_utils.SearchResult: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
         try:
-            results = self.collection_logics.get_media_by_collection_name(collection_name, page_number=page_number, page_size=page_size)
+            results = self.collection_logics.get_media_by_collection_name(collection_name, user_id=request.user_data.id,page_number=page_number, page_size=page_size)
             if len(results)==0:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The collection was not found")
             return search_utils.SearchResult(total_results_number=len(results), results=results, page_number=page_number, page_size=page_size)
