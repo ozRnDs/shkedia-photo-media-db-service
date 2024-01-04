@@ -10,11 +10,11 @@ from enum import Enum
 
 
 from db.sql_models import InsightEngineOrm, InsightOrm, MediaOrm
-from models.collection import CollectionBasic, CollectionPreview, CollectionObjectEnum
+from project_shkedia_models.collection import CollectionBasic, CollectionPreview, CollectionObjectEnum
 from db.service import DBService
 from authentication.service import AuthService
 from enum import Enum
-from models.media import MediaThumbnail
+from project_shkedia_models.media import MediaThumbnail
 
 class CollectionSearchField(str, Enum):
     ENGINE_NAME="ENGINE_NAME"

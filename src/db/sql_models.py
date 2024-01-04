@@ -1,11 +1,21 @@
 import os
 from sqlalchemy import String, ForeignKey, Text, DateTime, Enum, Integer, SmallInteger, PickleType
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, validates
 from sqlalchemy.sql import func
 from typing import Optional, List
 from uuid import uuid4
 
 from datetime import datetime
+
+def validate_date(field_name,value):
+    if type(value) == datetime:
+        return value
+    if type(value) == str:
+        return datetime.fromisoformat(value)
+    if type(value) == int:
+        return datetime(value)
+    raise TypeError(f"Unexpected value for {field_name}. Expected type: datetime, str, int")
+
 
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
 
@@ -22,6 +32,10 @@ class User(Base):
     devices: Mapped[List["DeviceOrm"]] = relationship(back_populates="owner")
     media: Mapped[List["MediaOrm"]] = relationship(back_populates="owner")
 
+    @validates("date")
+    def validate_date_field(self, key, value):
+        return validate_date(key,value)
+
 class DeviceOrm(Base):
     __tablename__ = "devices_"+ENVIRONMENT
 
@@ -32,6 +46,11 @@ class DeviceOrm(Base):
     owner_id: Mapped[str] = mapped_column(ForeignKey("users_"+ENVIRONMENT+".user_id"))
     owner: Mapped["User"] = relationship(back_populates="devices")
     media: Mapped[List["MediaOrm"]] = relationship(back_populates="device")
+
+    @validates("date")
+    def validate_date_field(self, key, value):
+        return validate_date(key,value)
+
 
 class MediaOrm(Base):
     __tablename__ = "media_"+ENVIRONMENT
@@ -63,6 +82,9 @@ class MediaOrm(Base):
     insights: Mapped[List["InsightOrm"]] = relationship(back_populates="media")
     insight_jobs: Mapped[List["InsightJobOrm"]] = relationship(back_populates="media")
 
+    @validates("created_on")
+    def validate_created_date(self, key, value):
+        return validate_date(key,value)
 
 class InsightEngineOrm(Base):
     __tablename__ =  "insight_engine_"+ENVIRONMENT
@@ -108,3 +130,7 @@ class InsightJobOrm(Base):
     media: Mapped["MediaOrm"] = relationship(back_populates="insight_jobs")
     insight_engine: Mapped["InsightEngineOrm"] = relationship(back_populates="jobs")
     insights: Mapped[List["InsightOrm"]] = relationship(back_populates="job")
+
+    @validates("start_time", "end_time", "net_time_seconds")
+    def validate_date_field(self, key, value):
+        return validate_date(key,value)

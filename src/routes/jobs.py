@@ -16,9 +16,9 @@ from db.sql_models import InsightEngineOrm, InsightOrm, MediaOrm, InsightJobOrm
 from db.service import DBService
 from logics.collections import CollectionLogicService, CollectionSearchField
 from authentication.service import AuthService
-from models.jobs import InsightJob
-from models.insights import InsightEngineBasic
-from models.media import MediaStorage, MediaUploadStatus
+from project_shkedia_models.jobs import InsightJob
+from project_shkedia_models.insights import InsightEngineBasic
+from project_shkedia_models.media import MediaStorage, MediaUploadStatus
 from . import search_utils
 
 class JobsServiceHandler:

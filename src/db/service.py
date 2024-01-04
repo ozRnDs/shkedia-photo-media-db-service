@@ -157,7 +157,8 @@ class DBService:
             result = session.scalars(update_query).first()
             if not result:
                 raise FileNotFoundError(f"Could not find an object to update. {search_in_field}=={value_of_field}")
-            for field, value in new_model_object.model_dump().items():
+            for field in new_model_object.model_dump().keys():
+                value = getattr(new_model_object,field)
                 if value != getattr(result,field):
                     setattr(result,field,value)
             # session.flush()

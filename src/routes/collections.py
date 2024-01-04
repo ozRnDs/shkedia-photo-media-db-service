@@ -13,11 +13,10 @@ from enum import Enum
 
 
 from db.sql_models import InsightEngineOrm, InsightOrm, MediaOrm
-from models.collection import CollectionBasic, CollectionPreview, CollectionObjectEnum
+from project_shkedia_models.collection import CollectionBasic, CollectionObjectEnum, CollectionPreview
 from db.service import DBService
 from logics.collections import CollectionLogicService, CollectionSearchField
 from authentication.service import AuthService
-from models.parser import sql_model_to_pydantic_model
 from . import search_utils
 
 class CollectionServiceHandler:
@@ -57,7 +56,7 @@ class CollectionServiceHandler:
     
     def get_collections_list(self, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic) -> List[CollectionBasic]:
         try:
-            response_type = getattr(sys.modules["models.collection"], response_type.value)
+            response_type = getattr(sys.modules["project_shkedia_models.collection"], response_type.value)
             sql_query = sqlalchemy.select(InsightOrm.name,InsightEngineOrm.name).join(InsightEngineOrm.insights).distinct()
             with Session(self.db_service.db_sql_engine) as session:
                 results = session.execute(sql_query).fetchall()
@@ -82,7 +81,7 @@ class CollectionServiceHandler:
             raise HTTPException(status_code=500,detail="Server Internal Error")
 
 
-    def get_collection_by_name(self, collection_name: str = None, page_number: int = None, page_size: int = 16) -> search_utils.SearchResult: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
+    def get_collection_by_name(self, collection_name: str = None, page_number: int = 0, page_size: int = 16) -> search_utils.SearchResult: #, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic):
         #TODO: Change to result type to handle the medias paging
         try:
             results = self.collection_logics.get_media_by_collection_name(collection_name, page_number=page_number, page_size=page_size)

@@ -13,10 +13,10 @@ from enum import Enum
 
 
 from db.sql_models import DeviceOrm, MediaOrm
-from models.media import MediaDB, MediaRequest, MediaObjectEnum, MediaIDs, MediaDevice, MediaMetadata, MediaStorage, MediaThumbnail
+from project_shkedia_models.media import MediaDB, MediaRequest, MediaObjectEnum, MediaIDs, MediaDevice, MediaMetadata, MediaStorage, MediaThumbnail
 from db.service import DBService
 from authentication.service import AuthService
-from models.parser import sql_model_to_pydantic_model
+from project_shkedia_models.parser import sql_model_to_pydantic_model
 from . import search_utils
 
 class MediaServiceHandler:
@@ -80,7 +80,7 @@ class MediaServiceHandler:
 
     def get_media(self, media_id: str = None, response_type: MediaObjectEnum = MediaObjectEnum.MediaIDs):
         try:
-            response_type = getattr(sys.modules["models.media"], response_type.value)
+            response_type = getattr(sys.modules["project_shkedia_models.media"], response_type.value)
             find_media = self.db_service.select(MediaOrm, response_type, **{"media_id": [media_id]})
             if find_media is None or len(find_media)==0:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="media was not found")
@@ -105,7 +105,7 @@ class MediaServiceHandler:
                 search_dictionary[search_field].append(search_value)
             if search_value and not search_field in search_dictionary:
                 search_dictionary[search_field]=[search_value]
-            response_type = getattr(sys.modules["models.media"], response_type.value)
+            response_type = getattr(sys.modules["project_shkedia_models.media"], response_type.value)
             get_media = self.db_service.select(MediaOrm,response_type,**search_dictionary)
             if get_media is None:
                 raise HTTPException(status_code=404, detail="media was not found")

@@ -13,10 +13,10 @@ from enum import Enum
 
 
 from db.sql_models import InsightEngineOrm, InsightOrm
-from models.insights import InsightEngineBasic,InsightEngine,InsightBasic, Insight, InsightEngineObjectEnum, InsightObjectEnum
+from project_shkedia_models.insights import InsightEngineBasic,InsightEngine,InsightBasic, Insight, InsightEngineObjectEnum, InsightObjectEnum
 from db.service import DBService
 from authentication.service import AuthService
-from models.parser import sql_model_to_pydantic_model
+from project_shkedia_models.parser import sql_model_to_pydantic_model
 from . import search_utils
 
 class InsightServiceHandler:
@@ -100,7 +100,7 @@ class InsightServiceHandler:
 
     def get_engine_mng(self, engine_id: str = None, response_type: InsightEngineObjectEnum = InsightEngineObjectEnum.InsightEngine):
         try:
-            response_type = getattr(sys.modules["models.insights"], response_type.value)
+            response_type = getattr(sys.modules["project_shkedia_models.insights"], response_type.value)
             find_media = self.db_service.select(InsightEngineOrm, response_type, id=[engine_id])
             if find_media is None or len(find_media)==0:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Insight engine was not found")
@@ -115,7 +115,7 @@ class InsightServiceHandler:
 
     def get_all_engines(self, response_type: InsightEngineObjectEnum = InsightEngineObjectEnum.InsightEngineBasic):
         try:
-            response_type = getattr(sys.modules["models.insights"], response_type.value)
+            response_type = getattr(sys.modules["project_shkedia_models.insights"], response_type.value)
             return self.db_service.select_all(InsightEngineOrm,response_type)
         except Exception as err:
             if type(err)==HTTPException:
@@ -127,7 +127,7 @@ class InsightServiceHandler:
 
     def get_engine(self, engine_id: str = None, response_type: InsightEngineObjectEnum = InsightEngineObjectEnum.InsightEngineBasic):
         try:
-            response_type = getattr(sys.modules["models.insights"], response_type.value)
+            response_type = getattr(sys.modules["project_shkedia_models.insights"], response_type.value)
             find_media = self.db_service.select(InsightEngineOrm, response_type, id=[engine_id])
             if find_media is None or len(find_media)==0:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Insight engine was not found")
@@ -152,7 +152,7 @@ class InsightServiceHandler:
                 search_dictionary[search_field].append(search_value)
             if search_value and not search_field in search_dictionary:
                 search_dictionary[search_field]=[search_value]
-            response_type = getattr(sys.modules["models.insights"], response_type.value)
+            response_type = getattr(sys.modules["project_shkedia_models.insights"], response_type.value)
             insights_list = self.db_service.select(InsightEngineOrm,response_type,**search_dictionary)
             if insights_list is None:
                 raise HTTPException(status_code=404, detail="Engine was not found")
@@ -180,7 +180,7 @@ class InsightServiceHandler:
                 search_dictionary[search_field].append(search_value)
             if search_value and not search_field in search_dictionary:
                 search_dictionary[search_field]=[search_value]
-            response_type = getattr(sys.modules["models.insights"], response_type.value)
+            response_type = getattr(sys.modules["project_shkedia_models.insights"], response_type.value)
             insights_list = self.db_service.select(InsightOrm,response_type,**search_dictionary)
             if insights_list is None:
                 raise HTTPException(status_code=404, detail="Insight was not found")
