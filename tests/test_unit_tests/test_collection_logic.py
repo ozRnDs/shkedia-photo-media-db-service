@@ -18,10 +18,20 @@ def collection_logic_fixture(mock_db_service) -> CollectionLogicService:
 def test_get_collections_metadata_by_names_nominal(collection_logic_fixture):
     # SETUP
     search_in_list = ["collection2","something_3"]
+    owner_id = "test"
     # RUN
-    results = collection_logic_fixture.get_collections_metadata_by_names(collections_names=search_in_list)
+    results = collection_logic_fixture.get_collections_metadata_by_names(collection_names=search_in_list, engine_names=[], user_id=owner_id)
     # ASSERT
     assert len(results) == 6
     for _,result in results.items():
         assert type(result) == CollectionPreview
         assert result.name in search_in_list
+
+def test_get_collections_metadata_by_names_nominal_bad_user(collection_logic_fixture):
+    # SETUP
+    search_in_list = ["collection2","something_3"]
+    owner_id = "tester"
+    # RUN
+    results = collection_logic_fixture.get_collections_metadata_by_names(collection_names=search_in_list, engine_names=[], user_id=owner_id)
+    # ASSERT
+    assert len(results) == 0

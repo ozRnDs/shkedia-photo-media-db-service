@@ -26,7 +26,7 @@ def mock_db_service():
     
     list_of_items_to_insert = []
 
-    new_user = User(user_name="test", password="test", user_id="test_user",
+    new_user = User(user_name="test", password="test", user_id="dontknow",
                     devices=[DeviceOrm(device_name="device1", device_id="test_device",
                                     media=[MediaOrm(media_name="media1", 
                                                 media_type="IMAGE", 

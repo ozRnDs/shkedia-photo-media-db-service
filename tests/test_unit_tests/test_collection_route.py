@@ -8,12 +8,15 @@ from routes import search_utils
 
 @pytest.fixture(scope="module")
 def collection_handler_fixture(mock_db_service):
+
+    mock_auth_service = MagicMock()
+
     collection_logics = CollectionLogicService(db_service=mock_db_service,
                                               app_logging_service=None,
-                                              auth_service=None)
+                                              auth_service=mock_auth_service)
     collection_handler = CollectionServiceHandler(db_service=mock_db_service,
                                             app_logging_service=None,
-                                            auth_service=None,
+                                            auth_service=mock_auth_service,
                                             collection_logics=collection_logics)
     
     yield collection_handler
