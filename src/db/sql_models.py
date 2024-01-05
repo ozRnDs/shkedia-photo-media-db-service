@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import String, ForeignKey, Text, DateTime, Enum, Integer, SmallInteger, PickleType
+from sqlalchemy import String, ForeignKey, Text, DateTime, Enum, Integer, SmallInteger, PickleType, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, validates
 from sqlalchemy.sql import func
 func: callable
@@ -15,6 +15,8 @@ def validate_date(field_name,value):
         return datetime.fromisoformat(value)
     if type(value) == int:
         return datetime(value)
+    if not value:
+        return None
     raise TypeError(f"Unexpected value for {field_name}. Expected type: datetime, str, int")
 
 
@@ -112,6 +114,7 @@ class InsightOrm(Base):
     description: Mapped[Optional[str]] = mapped_column(String(1000))
     bounding_box: Mapped[Optional[List[int]]] = mapped_column(PickleType())
     status: Mapped[str] = mapped_column(String(50), default="COMPUTED") # ENUM: COMPUTED, APPROVED, REJECTED
+    prob: Mapped[Optional[float]] = mapped_column(Float())
 
     media: Mapped["MediaOrm"] = relationship(back_populates="insights")
     insight_engine: Mapped["InsightEngineOrm"] = relationship(back_populates="insights")
