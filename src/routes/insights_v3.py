@@ -1,3 +1,4 @@
+import traceback
 import sys
 import logging
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class InsightServiceHandlerV3:
         router.add_api_route(path="/insights-engines",
                              endpoint=self.get_all_engines,
                              methods=["get"],
-                             response_model=List[InsightEngineBasic])
+                             response_model=Union[List[InsightEngineBasic],List[InsightEngineValues]])
         router.add_api_route(path="/insights-engines/search",
                              endpoint=self.search_engine,
                              methods=["get"],
@@ -114,10 +115,21 @@ class InsightServiceHandlerV3:
     def get_all_engines(self, response_type: InsightEngineObjectEnum = InsightEngineObjectEnum.InsightEngineBasic):
         try:
             response_type = getattr(sys.modules["project_shkedia_models.insights"], response_type.value)
-            return self.db_service.select_all(InsightEngineOrm,response_type)
+            engine_results = self.db_service.select(InsightEngineOrm, output_model=response_type)
+            if engine_results is None or len(engine_results)==0:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Insight engine was not found")           
+            if response_type == InsightEngineValues:
+                for engine in engine_results:
+                    engine: InsightEngineValues = engine
+                    class InsightsNames(BaseModel):
+                        name: str
+                    insights_results: List[InsightsNames] = self.db_service.select(InsightOrm,output_model=InsightsNames,distinct=InsightOrm.name,order_by=InsightOrm.name,insight_engine_id=[engine.id])
+                    engine.insights_names = [item.name for item in insights_results]
+            return engine_results
         except Exception as err:
             if type(err)==HTTPException:
                 raise err
+            traceback.print_exc()
             logger.error(str(err))
             if type(err)==AttributeError:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
@@ -126,7 +138,10 @@ class InsightServiceHandlerV3:
     def get_engine(self, engine_id: str = None, response_type: InsightEngineObjectEnum = InsightEngineObjectEnum.InsightEngineBasic):
         try:
             response_type = getattr(sys.modules["project_shkedia_models.insights"], response_type.value)
-            engine_results = self.db_service.select(InsightEngineOrm, output_model=response_type, id=[engine_id])
+            if engine_id:
+                engine_results = self.db_service.select(InsightEngineOrm, output_model=response_type, id=[engine_id])
+            else:
+                engine_results = self.db_service.select(InsightEngineOrm, output_model=response_type)
             if engine_results is None or len(engine_results)==0:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Insight engine was not found")
             engine_results = engine_results[0]
