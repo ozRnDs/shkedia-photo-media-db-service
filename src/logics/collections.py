@@ -45,7 +45,7 @@ class CollectionLogicService:
                                         media_table.c.media_id)
         collections_sql_query = collections_sql_query.join(engine_table, insight_table.c.insight_engine_id == engine_table.c.id)
         collections_sql_query=collections_sql_query.join(media_table,media_table.c.media_id==insight_table.c.media_id)
-        collections_sql_query=collections_sql_query.where(media_table.c.owner_id==user_id).order_by(insight_table.c.name)
+        collections_sql_query=collections_sql_query.where(media_table.c.owner_id==user_id).order_by(insight_table.c.name).distinct()
         if len(collection_names)>0:
             collections_sql_query=collections_sql_query.where(insight_table.c.name.in_(collection_names))
         if len(engine_names)>0:
@@ -77,7 +77,7 @@ class CollectionLogicService:
         keys_list, select_list = self.db_service.get_columns_from_models(MediaOrm, MediaThumbnail)
         sql_query = sqlalchemy.select(*select_list)
         sql_query=sql_query.join(insight_table,MediaOrm.media_id==insight_table.c.media_id)
-        sql_query=sql_query.where(insight_table.c.name==collection_name).where(MediaOrm.owner_id==user_id).order_by(MediaOrm.created_on).offset(page_number*page_size).limit(page_size)
+        sql_query=sql_query.where(insight_table.c.name==collection_name).where(MediaOrm.owner_id==user_id).order_by(MediaOrm.created_on).offset(page_number*page_size).limit(page_size).distinct()
         with Session(self.db_service.db_sql_engine) as session:
             results = session.execute(sql_query).fetchall()
             results = self.db_service.convert_results_to_orm(results,keys_list,MediaThumbnail)
