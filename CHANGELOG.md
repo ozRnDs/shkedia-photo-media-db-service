@@ -1,3 +1,36 @@
+## 0.7.0 (2024-01-05)
+
+### Feat
+
+- **routes/collections**: Add route to get media for collection. Improve collections routes endpoints naming
+- **db/user_service**: Get current user details from auth micro-service
+- **authentication/service**: Support auth_service token received from client. Get user data using that token
+- **routes/media,routes/insights_v3,db/service**: Add authentication and authorizations to selected routes
+- **collections**: Add auth to selected routes and get only logged-in user's information
+- **authentication**: Implement the authentication service. It uses the project authentication micro-service
+- **routes/insights_v3**: Add response with engine distict values. Improve api end-point naming
+- **logics/collections,routes/collections**: Add logics to get medias to preview collection. Fix get collection by engine
+- **routes/insights**: Add engine/search route
+- **routes/jobs**: Add post /job to update jobs
+
+### Fix
+
+- **CollectionLogicService**: Get collections metadata by collection and engine name
+- **authentication/service**: Catch errors in auth_request and raise HTTPException
+- **logics/collection**: Add media_key to the CollectionPreview
+- **db/sql_models**: Add unique constrain to all ids
+- **logics/collections**: Repair the thumbnail return structure
+- **routes/jobs**: Position /jobs/search before /jobs/{engine_name}. Fix errors in get_list_of_jobs_for_engine. Prevent response for non existing engine in no_jobs route
+- **sql_models**: Update the mapping between InsightJobOrm and InsightOrm
+- **routes/job**: Add filter to no_job route based on the uploaded status
+
+### Refactor
+
+- **config,auth/service,db/sql_models,routes/collections,routes/media**: Style and pylint fixes
+- **routes,logics,db**: Export models folder to project-shkedia-models library
+- **main.py**: Disable table creation on application startup
+- **db,models**: Add connection between job and insights created from that job
+
 ## 0.6.0 (2023-12-28)
 
 ### Feat
