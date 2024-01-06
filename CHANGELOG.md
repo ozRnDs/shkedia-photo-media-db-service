@@ -1,3 +1,14 @@
+## 0.8.0 (2024-01-06)
+
+### Feat
+
+- **routes/insights_v3**: Return distinct values to the route that returns all the engines
+- **InsightOrm**: Add prob field. Create migration for dev0
+
+### Fix
+
+- **login/collection**: Add distinct filter to get_media_by_collection, get_collections_metadata
+
 ## 0.7.0 (2024-01-05)
 
 ### Feat
