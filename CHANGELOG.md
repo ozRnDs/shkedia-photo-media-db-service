@@ -1,3 +1,9 @@
+## 0.8.2 (2024-01-07)
+
+### Perf
+
+- **logics/collection**: Disable thumbnail in collection. Send media_id instead
+
 ## 0.8.1 (2024-01-07)
 
 ### Fix
