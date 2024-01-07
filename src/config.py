@@ -7,6 +7,7 @@ class ApplicationConfiguration:
     RECONNECT_WAIT_TIME: int = 1
     RETRY_NUMBER: int = 10
     ENVIRONMENT: str = "DEV"
+    VERSION: str = "0.8.0"
     DEBUG: bool = False
 
     # Authentication Configuration values

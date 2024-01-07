@@ -21,7 +21,9 @@ from logics.collections import CollectionLogicService
 # from models.session import Session
 # from models.media import MediaDB
     
-app = FastAPI(description="Rest API Interface for the media db service")
+app = FastAPI(title="Media API",
+              description="Rest API Interface for the media db service",
+              version=app_config.VERSION)
 
 # Initialize all app services
 try:
