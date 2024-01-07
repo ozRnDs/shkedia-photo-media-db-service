@@ -1,3 +1,9 @@
+## 0.8.1 (2024-01-07)
+
+### Fix
+
+- **routes/media**: Fix the order in the request of update_media, to try the child object first
+
 ## 0.8.0 (2024-01-06)
 
 ### Feat
