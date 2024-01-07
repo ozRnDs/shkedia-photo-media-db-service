@@ -14,7 +14,7 @@ from enum import Enum
 
 
 from db.sql_models import DeviceOrm, MediaOrm
-from project_shkedia_models.media import MediaDB, MediaRequest, MediaObjectEnum, MediaIDs, MediaDevice, MediaMetadata, MediaStorage, MediaThumbnail
+from project_shkedia_models.media import MediaRequest, MediaObjectEnum, MediaIDs, MediaDevice, MediaMetadata, MediaStorage, MediaThumbnail, Media
 from db.service import DBService
 from authentication.service import AuthService
 from project_shkedia_models.parser import sql_model_to_pydantic_model
@@ -128,7 +128,7 @@ class MediaServiceHandler:
     def delete_media(self, media_id: str):
         raise HTTPException(status_code=status.HTTP_425_TOO_EARLY, detail="Not Implemented")
 
-    def update_media(self, request: Request, new_media: Union[MediaMetadata,MediaThumbnail,MediaStorage,MediaDevice, MediaIDs]) -> MediaIDs:
+    def update_media(self, request: Request, new_media: Union[Media, MediaThumbnail,MediaMetadata,MediaStorage,MediaDevice,MediaIDs]) -> MediaIDs:
         try:
             if request.user_data.id != new_media.owner_id:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Permission Denied")
