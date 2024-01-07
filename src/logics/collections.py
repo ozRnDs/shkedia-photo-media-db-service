@@ -14,7 +14,7 @@ from project_shkedia_models.collection import CollectionBasic, CollectionPreview
 from db.service import DBService
 from authentication.service import AuthService
 from enum import Enum
-from project_shkedia_models.media import MediaThumbnail
+from project_shkedia_models.media import MediaThumbnail, MediaMetadata
 
 class CollectionSearchField(str, Enum):
     ENGINE_NAME="ENGINE_NAME"
@@ -59,14 +59,14 @@ class CollectionLogicService:
                 media_id = result[2]
                 key = f"{engine_name}_{temp_collection_name}"
                 if not key in results_dict:
-                    results_dict[key]=CollectionPreview(name=temp_collection_name, engine_name=engine_name)
+                    results_dict[key]=CollectionPreview(name=temp_collection_name, engine_name=engine_name,thumbnail=media_id)
                 results_dict[key].media_list.append(media_id)
             media_ids = [result.media_list[0] for _,result in results_dict.items()]
-            thumbnails = self.__get_thumbnails_for_medias__(media_ids=media_ids,session=session)
-            for media_id, thumbnail in thumbnails.items():
-                for _,result in results_dict.items():
-                    if result.thumbnail is None and media_id in result.media_list:
-                        result.thumbnail, result.media_key = thumbnail
+            # thumbnails = self.__get_thumbnails_for_medias__(media_ids=media_ids,session=session)
+            # for media_id, thumbnail in thumbnails.items():
+            #     for _,result in results_dict.items():
+            #         if result.thumbnail is None and media_id in result.media_list:
+            #             result.thumbnail, result.media_key = thumbnail
             return results_dict
         
     def get_media_by_collection_name(self,collection_name: str, user_id: str,
@@ -74,16 +74,14 @@ class CollectionLogicService:
         insight_table = sqlalchemy.alias(InsightOrm)
         # media_table = sqlalchemy.alias(MediaOrm)
 
-        keys_list, select_list = self.db_service.get_columns_from_models(MediaOrm, MediaThumbnail)
+        keys_list, select_list = self.db_service.get_columns_from_models(MediaOrm, MediaMetadata)
         sql_query = sqlalchemy.select(*select_list)
         sql_query=sql_query.join(insight_table,MediaOrm.media_id==insight_table.c.media_id)
         sql_query=sql_query.where(insight_table.c.name==collection_name).where(MediaOrm.owner_id==user_id).order_by(MediaOrm.created_on).offset(page_number*page_size).limit(page_size).distinct()
         with Session(self.db_service.db_sql_engine) as session:
             results = session.execute(sql_query).fetchall()
-            results = self.db_service.convert_results_to_orm(results,keys_list,MediaThumbnail)
+            results = self.db_service.convert_results_to_orm(results,keys_list,MediaMetadata)
         return results
-
-
 
     def __get_thumbnails_for_medias__(self,media_ids: List[str], session: Session = None) -> Dict[str,str]:
         session_existed = True if session else False
