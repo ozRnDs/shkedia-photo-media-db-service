@@ -203,11 +203,3 @@ class DBService:
                 results_orm.append(output_model(**result_dict))
         
         return results_orm
-
-    # def close(self):
-    #     if not self.db_sql_engine:
-    #         return
-    #     if self.db_sql_engine.closed:
-    #         return
-    #     self.db_sql_engine.close()
-    #     logger.info("Closed DB Connection") 
