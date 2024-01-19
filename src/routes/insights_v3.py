@@ -123,7 +123,11 @@ class InsightServiceHandlerV3:
                     engine: InsightEngineValues = engine
                     class InsightsNames(BaseModel):
                         name: str
-                    insights_results: List[InsightsNames] = self.db_service.select(InsightOrm,output_model=InsightsNames,distinct=InsightOrm.name,order_by=InsightOrm.name,insight_engine_id=[engine.id])
+                    insights_results: List[InsightsNames] = self.db_service.select(InsightOrm,
+                                                                                   output_model=InsightsNames,
+                                                                                   distinct=InsightOrm.name,
+                                                                                   order_by=InsightOrm.name,
+                                                                                   insight_engine_id=[engine.id])
                     engine.insights_names = [item.name for item in insights_results]
             return engine_results
         except Exception as err:
