@@ -39,7 +39,8 @@ class CollectionServiceHandler:
         router.add_api_route(path="/collections",
                              endpoint=self.get_collections_list,
                              methods=["get"],
-                             response_model=List[CollectionBasic])
+                             response_model=List[CollectionBasic],
+                             dependencies=[Depends(self.auth_service.auth_request)])
         router.add_api_route(path="/insights-engines/{engine_name}/collections",
                              endpoint=self.get_collection_by_engine,
                              methods=["get"],
@@ -58,10 +59,10 @@ class CollectionServiceHandler:
 
         return router
     
-    def get_collections_list(self, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic) -> List[CollectionBasic]:
+    def get_collections_list(self, request: Request, response_type: CollectionObjectEnum = CollectionObjectEnum.CollectionBasic) -> List[CollectionBasic]:
         try:
             response_type = getattr(sys.modules["project_shkedia_models.collection"], response_type.value)
-            sql_query = sqlalchemy.select(InsightOrm.name,InsightEngineOrm.name).join(InsightEngineOrm.insights).distinct()
+            sql_query = sqlalchemy.select(InsightOrm.name,InsightEngineOrm.name,MediaOrm.owner_id).join(InsightEngineOrm.insights).join(InsightOrm.media).where(MediaOrm.owner_id==request.user_data.id).distinct()
             with Session(self.db_service.db_sql_engine) as session:
                 results = session.execute(sql_query).fetchall()
                 results = [CollectionBasic(name=result[0], engine_name=result[1]) for result in results]
